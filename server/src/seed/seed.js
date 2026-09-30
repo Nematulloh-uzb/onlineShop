@@ -7,6 +7,18 @@ import { categoriesData } from './categoriesData.js';
 import { productsData } from './productsData.js';
 import { promoData } from './promoData.js';
 
+const mensCatalogProductSlugs = new Set([
+  'paxta-futbolka',
+  'charm-kamar',
+  'erkaklar-zigir-koylagi',
+  'erkaklar-organik-paxta-polo',
+  'erkaklar-jun-pidjagi',
+  'erkaklar-zigir-shimi',
+  'qayta-ishlangan-toladan-ryukzak',
+  'tabiiy-yogoch-quyosh-kozoynagi',
+  'erkaklar-eko-charm-poyabzali',
+]);
+
 const seedDatabase = async () => {
   try {
     console.log('[Seed] Ma‘lumotlar bazasiga ulanmoqda...');
@@ -16,10 +28,14 @@ const seedDatabase = async () => {
       categoriesData.map((category) => ({
         updateOne: {
           filter: { slug: category.slug },
-          update: { $setOnInsert: category },
+          update: { $set: category },
           upsert: true,
         },
       }))
+    );
+    await Category.updateMany(
+      { slug: { $in: ['ayollar', 'yangi-kelganlar', 'chegirmalar'] } },
+      { $set: { isActive: false } }
     );
     const categories = await Category.find({
       slug: { $in: categoriesData.map(({ slug }) => slug) },
@@ -28,21 +44,40 @@ const seedDatabase = async () => {
 
     await Product.bulkWrite(
       productsData.map(({ categorySlug, ...product }) => {
-        const category = categoryIds.get(categorySlug);
-        if (!category) throw new Error(`Mahsulot kategoriyasi topilmadi: ${categorySlug}`);
+        if (!mensCatalogProductSlugs.has(product.slug)) {
+          return {
+            updateOne: {
+              filter: { slug: product.slug },
+              update: { $set: { isActive: false } },
+            },
+          };
+        }
+
+        const targetCategorySlug = product.slug === 'paxta-futbolka' ? 'erkaklar' : categorySlug;
+        const category = categoryIds.get(targetCategorySlug);
+        if (!category) throw new Error(`Mahsulot kategoriyasi topilmadi: ${targetCategorySlug}`);
+        const mensProduct = product.slug === 'paxta-futbolka'
+          ? {
+            ...product,
+            name: 'Erkaklar organik paxta futbolkasi',
+            shortDescription: 'Organik paxtadan tayyorlangan erkaklar futbolkasi',
+            tags: ['erkaklar', 'futbolka', 'paxta', 'organik'],
+          }
+          : product;
         return {
           updateOne: {
             filter: { slug: product.slug },
             update: {
-              $setOnInsert: {
-                ...product,
+              $set: {
+                ...mensProduct,
                 category,
+                gender: 'erkaklar',
+                isActive: true,
                 ratingAverage: 5,
                 ratingCount: 0,
                 soldCount: 0,
               },
             },
-            upsert: true,
           },
         };
       })
@@ -58,8 +93,8 @@ const seedDatabase = async () => {
       }))
     );
 
-    console.log(`[Seed] ${categoriesData.length} kategoriya, ${productsData.length} mahsulot va ${promoData.length} promo-kod tayyor.`);
-    console.log('[Seed] Mavjud foydalanuvchi, buyurtma va katalog ma‘lumotlari o‘zgartirilmadi.');
+    console.log(`[Seed] ${categoriesData.length} erkaklar kategoriyasi, ${mensCatalogProductSlugs.size} erkaklar mahsuloti va ${promoData.length} promo-kod tayyor.`);
+    console.log('[Seed] Seed katalogidagi ayollar kolleksiyasi faol katalogdan olib tashlandi; mavjud foydalanuvchi, buyurtma va savatlar saqlandi.');
   } catch (error) {
     console.error('[Seed] Xatolik yuz berdi:', error);
     process.exitCode = 1;

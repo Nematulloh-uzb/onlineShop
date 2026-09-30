@@ -22,7 +22,7 @@ export const getProducts = catchAsync(async (req, res) => {
     new: isNew,
   } = req.query;
 
-  const queryObj = { isActive: true };
+  const queryObj = { isActive: true, gender: 'erkaklar' };
 
   // Toifa bo'yicha
   if (category && category !== 'barchasi') {
@@ -35,11 +35,6 @@ export const getProducts = catchAsync(async (req, res) => {
       catId = foundCat._id;
     }
     queryObj.category = catId;
-  }
-
-  // Jins bo'yicha
-  if (gender && ['ayollar', 'erkaklar', 'uniseks'].includes(gender)) {
-    queryObj.gender = { $in: [gender, 'uniseks'] };
   }
 
   // Narx oralig'i
@@ -151,7 +146,7 @@ export const getProducts = catchAsync(async (req, res) => {
 export const getProductBySlug = catchAsync(async (req, res, next) => {
   const { slug } = req.params;
 
-  const product = await Product.findOne({ slug, isActive: true }).populate('category', 'name slug description');
+  const product = await Product.findOne({ slug, isActive: true, gender: 'erkaklar' }).populate('category', 'name slug description');
 
   if (!product) {
     return next(new ApiError(404, 'Mahsulot topilmadi'));
@@ -169,7 +164,7 @@ export const getProductBySlug = catchAsync(async (req, res, next) => {
 export const getRelatedProducts = catchAsync(async (req, res, next) => {
   const { slug } = req.params;
 
-  const currentProduct = await Product.findOne({ slug, isActive: true });
+  const currentProduct = await Product.findOne({ slug, isActive: true, gender: 'erkaklar' });
   if (!currentProduct) {
     return next(new ApiError(404, 'Mahsulot topilmadi'));
   }
@@ -178,6 +173,7 @@ export const getRelatedProducts = catchAsync(async (req, res, next) => {
     _id: { $ne: currentProduct._id },
     category: currentProduct.category,
     isActive: true,
+    gender: 'erkaklar',
   })
     .populate('category', 'name slug')
     .limit(4);
@@ -187,6 +183,7 @@ export const getRelatedProducts = catchAsync(async (req, res, next) => {
     const additional = await Product.find({
       _id: { $nin: [currentProduct._id, ...related.map((p) => p._id)] },
       isActive: true,
+      gender: 'erkaklar',
     })
       .populate('category', 'name slug')
       .limit(4 - related.length);
@@ -217,6 +214,7 @@ export const getSearchSuggestions = catchAsync(async (req, res) => {
   const regex = new RegExp(escapedQuery, 'i');
   const products = await Product.find({
     isActive: true,
+    gender: 'erkaklar',
     $or: [{ name: regex }, { material: regex }, { tags: regex }],
   })
     .select('name slug price images ecoBadge category')
