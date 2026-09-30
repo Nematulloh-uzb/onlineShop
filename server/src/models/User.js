@@ -23,11 +23,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Ismingizni kiriting'],
       trim: true,
+      maxlength: [80, 'Ism 80 belgidan oshmasligi kerak'],
     },
     surname: {
       type: String,
       trim: true,
       default: '',
+      maxlength: [80, 'Familiya 80 belgidan oshmasligi kerak'],
     },
     email: {
       type: String,
@@ -41,6 +43,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: '',
+      maxlength: [30, 'Telefon raqami 30 belgidan oshmasligi kerak'],
     },
     avatarUrl: {
       type: String,
@@ -73,6 +76,23 @@ const userSchema = new mongoose.Schema(
     },
     resetPasswordExpires: {
       type: Date,
+      select: false,
+    },
+    emailVerified: {
+      type: Boolean,
+      default: true,
+    },
+    emailVerificationCodeHash: {
+      type: String,
+      select: false,
+    },
+    emailVerificationExpires: {
+      type: Date,
+      select: false,
+    },
+    emailVerificationAttempts: {
+      type: Number,
+      default: 0,
       select: false,
     },
     isActive: {

@@ -38,4 +38,12 @@ export const env = {
   SHIPPING_FEE: parseInt(process.env.SHIPPING_FEE || '35000', 10),
   ADMIN_EMAIL: process.env.ADMIN_EMAIL || '',
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || '',
+  SMTP_HOST: process.env.SMTP_HOST || 'smtp.gmail.com',
+  SMTP_PORT: Number.parseInt(process.env.SMTP_PORT || '465', 10),
+  SMTP_SECURE: process.env.SMTP_SECURE
+    ? process.env.SMTP_SECURE.toLowerCase() === 'true'
+    : Number.parseInt(process.env.SMTP_PORT || '465', 10) === 465,
+  SMTP_USER: process.env.SMTP_USER || '',
+  SMTP_PASS: process.env.SMTP_PASS || '',
+  SMTP_FROM: process.env.SMTP_FROM || '',
 };

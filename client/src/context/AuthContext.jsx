@@ -43,7 +43,12 @@ export function AuthProvider({ children }) {
   };
 
   const login = (credentials) => authenticate('/auth/login', credentials);
-  const register = (details) => authenticate('/auth/register', details);
+  const register = async (details) => {
+    const { data } = await api.post('/auth/register', details);
+    return data;
+  };
+  const verifyEmail = (details) => authenticate('/auth/verify-email', details);
+  const resetPassword = (token, details) => authenticate(`/auth/reset-password/${encodeURIComponent(token)}`, details);
 
   const updateUser = (nextUser) => {
     setUser((current) => ({ ...current, ...nextUser }));
@@ -63,6 +68,8 @@ export function AuthProvider({ children }) {
     authError,
     login,
     register,
+    verifyEmail,
+    resetPassword,
     updateUser,
     logout,
   }), [user, status, authError]);

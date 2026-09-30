@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { createHash } from 'node:crypto';
+import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 import { ApiError } from '../utils/ApiError.js';
@@ -15,6 +15,24 @@ import {
   sendTokenResponse,
 } from '../utils/token.js';
 import { env } from '../config/env.js';
+import { isEmailConfigured, sendPasswordResetLink, sendVerificationCode } from '../services/emailService.js';
+
+const hashVerificationCode = (code) => createHmac('sha256', env.JWT_ACCESS_SECRET).update(code).digest('hex');
+
+const getEmailConfigurationError = () => (
+  isEmailConfigured()
+    ? null
+    : new ApiError(503, 'Email yuborish sozlanmagan. Server administratori Gmail SMTP ma’lumotlarini kiritsin.')
+);
+
+const issueVerificationCode = async (user) => {
+  const code = String(randomInt(100000, 1000000));
+  user.emailVerificationCodeHash = hashVerificationCode(code);
+  user.emailVerificationExpires = new Date(Date.now() + 10 * 60 * 1000);
+  user.emailVerificationAttempts = 0;
+  await user.save();
+  await sendVerificationCode({ email: user.email, name: user.name, code });
+};
 
 // 1. Ro'yxatdan o'tish
 export const register = catchAsync(async (req, res, next) => {
@@ -35,25 +53,87 @@ export const register = catchAsync(async (req, res, next) => {
     return next(new ApiError(400, 'Parol kamida 8 ta belgidan iborat bo‘lishi, kamida bitta harf va bitta raqamni o‘z ichiga olishi kerak'));
   }
 
+  const emailConfigurationError = getEmailConfigurationError();
+  if (emailConfigurationError) return next(emailConfigurationError);
+
   const normalizedEmail = email.trim().toLowerCase();
-  const existingUser = await User.findOne({ email: normalizedEmail });
-  if (existingUser) {
+  let existingUser = await User.findOne({ email: normalizedEmail })
+    .select('+emailVerificationCodeHash +emailVerificationExpires +emailVerificationAttempts');
+  if (existingUser?.emailVerified !== false) {
     return next(new ApiError(409, 'Ushbu elektron pochta manzili allaqachon ro‘yxatdan o‘tgan'));
   }
 
-  const passwordHash = await bcrypt.hash(password, 10);
-
-  const newUser = await User.create({
-    name,
-    surname: surname || '',
+  const user = existingUser || await User.create({
+    name: name.trim(),
+    surname: typeof surname === 'string' ? surname.trim() : '',
     email: normalizedEmail,
-    phone: phone || '',
-    passwordHash,
+    phone: typeof phone === 'string' ? phone.trim() : '',
+    passwordHash: await bcrypt.hash(password, 10),
     newsletterOptIn: !!newsletterOptIn,
     role: 'customer',
+    emailVerified: false,
   });
 
-  await sendTokenResponse(newUser, 201, res);
+  await issueVerificationCode(user);
+  res.status(existingUser ? 200 : 201).json({
+    success: true,
+    message: 'Tasdiqlash kodi elektron pochtangizga yuborildi.',
+    data: { email: user.email },
+  });
+});
+
+export const verifyEmail = catchAsync(async (req, res, next) => {
+  const { email, code } = req.body || {};
+  if (typeof email !== 'string' || typeof code !== 'string' || !/^\d{6}$/.test(code)) {
+    return next(new ApiError(400, 'Elektron pochta va 6 xonali tasdiqlash kodini kiriting'));
+  }
+
+  const user = await User.findOne({ email: email.trim().toLowerCase() })
+    .select('+emailVerificationCodeHash +emailVerificationExpires +emailVerificationAttempts');
+  if (!user || user.emailVerified || !user.emailVerificationCodeHash) {
+    return next(new ApiError(400, 'Tasdiqlash kodi yaroqsiz yoki uning muddati o‘tgan'));
+  }
+  if (!user.emailVerificationExpires || user.emailVerificationExpires.getTime() <= Date.now()) {
+    return next(new ApiError(400, 'Tasdiqlash kodi yaroqsiz yoki uning muddati o‘tgan'));
+  }
+  if (user.emailVerificationAttempts >= 5) {
+    return next(new ApiError(429, 'Urinishlar chegarasi tugadi. Yangi kod so‘rang.'));
+  }
+
+  const submittedHash = Buffer.from(hashVerificationCode(code), 'hex');
+  const savedHash = Buffer.from(user.emailVerificationCodeHash, 'hex');
+  const matches = submittedHash.length === savedHash.length && timingSafeEqual(submittedHash, savedHash);
+  if (!matches) {
+    user.emailVerificationAttempts += 1;
+    await user.save();
+    return next(new ApiError(400, 'Tasdiqlash kodi noto‘g‘ri'));
+  }
+
+  user.emailVerified = true;
+  user.emailVerificationCodeHash = undefined;
+  user.emailVerificationExpires = undefined;
+  user.emailVerificationAttempts = 0;
+  await user.save();
+  await sendTokenResponse(user, 200, res);
+});
+
+export const resendVerificationCode = catchAsync(async (req, res, next) => {
+  const { email } = req.body || {};
+  if (typeof email !== 'string' || !email.trim()) {
+    return next(new ApiError(400, 'Elektron pochta manzilini kiriting'));
+  }
+  const emailConfigurationError = getEmailConfigurationError();
+  if (emailConfigurationError) return next(emailConfigurationError);
+
+  const user = await User.findOne({ email: email.trim().toLowerCase() })
+    .select('+emailVerificationCodeHash +emailVerificationExpires +emailVerificationAttempts');
+  if (user && !user.emailVerified) {
+    await issueVerificationCode(user);
+  }
+  res.status(200).json({
+    success: true,
+    message: 'Agar tasdiqlanishi kerak bo‘lgan hisob mavjud bo‘lsa, yangi kod yuborildi.',
+  });
 });
 
 // 2. Tizimga kirish
@@ -67,6 +147,9 @@ export const login = catchAsync(async (req, res, next) => {
   const user = await User.findOne({ email: email.trim().toLowerCase() }).select('+passwordHash');
   if (!user || !user.isActive) {
     return next(new ApiError(401, 'Elektron pochta yoki parol noto‘g‘ri'));
+  }
+  if (!user.emailVerified) {
+    return next(new ApiError(403, 'Davom etish uchun avval elektron pochtangizni tasdiqlang.'));
   }
 
   const isPasswordMatched = await user.comparePassword(password);
@@ -179,7 +262,29 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
     return next(new ApiError(400, 'Elektron pochta manzilini kiriting'));
   }
 
-  return next(new ApiError(503, 'Parolni tiklash xizmati hozircha mavjud emas'));
+  const emailConfigurationError = getEmailConfigurationError();
+  if (emailConfigurationError) return next(emailConfigurationError);
+
+  const user = await User.findOne({ email: email.trim().toLowerCase() })
+    .select('+resetPasswordTokenHash +resetPasswordExpires');
+  if (user && user.isActive) {
+    const token = randomBytes(32).toString('hex');
+    user.resetPasswordTokenHash = createHash('sha256').update(token).digest('hex');
+    user.resetPasswordExpires = new Date(Date.now() + 30 * 60 * 1000);
+    await user.save();
+    try {
+      await sendPasswordResetLink({ email: user.email, name: user.name, token });
+    } catch (error) {
+      user.resetPasswordTokenHash = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save();
+      throw error;
+    }
+  }
+  res.status(200).json({
+    success: true,
+    message: 'Agar bu manzil bilan hisob mavjud bo‘lsa, parolni tiklash havolasi yuborildi.',
+  });
 });
 
 // 7. Parolni tiklash

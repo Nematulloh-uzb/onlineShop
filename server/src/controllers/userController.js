@@ -35,14 +35,22 @@ const removePreviousAvatar = async (userId, avatarUrl) => {
 // Profil ma'lumotlarini yangilash
 export const updateMe = catchAsync(async (req, res, next) => {
   const { name, surname, phone, newsletterOptIn } = req.body || {};
+  if (
+    (name !== undefined && (typeof name !== 'string' || !name.trim() || name.trim().length > 80))
+    || (surname !== undefined && (typeof surname !== 'string' || surname.trim().length > 80))
+    || (phone !== undefined && (typeof phone !== 'string' || phone.trim().length > 30))
+    || (newsletterOptIn !== undefined && typeof newsletterOptIn !== 'boolean')
+  ) {
+    return next(new ApiError(400, 'Profil ma’lumotlari noto‘g‘ri yoki ruxsat etilgan uzunlikdan oshdi'));
+  }
 
   const updatedUser = await User.findByIdAndUpdate(
     req.user._id,
     {
-      ...(name && { name }),
-      ...(surname !== undefined && { surname }),
-      ...(phone !== undefined && { phone }),
-      ...(newsletterOptIn !== undefined && { newsletterOptIn: !!newsletterOptIn }),
+      ...(name !== undefined && { name: name.trim() }),
+      ...(surname !== undefined && { surname: surname.trim() }),
+      ...(phone !== undefined && { phone: phone.trim() }),
+      ...(newsletterOptIn !== undefined && { newsletterOptIn }),
     },
     { new: true, runValidators: true }
   );

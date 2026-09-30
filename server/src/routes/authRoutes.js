@@ -7,6 +7,8 @@ import {
   getMe,
   forgotPassword,
   resetPassword,
+  verifyEmail,
+  resendVerificationCode,
 } from '../controllers/authController.js';
 import { protect } from '../middlewares/auth.js';
 import { authLimiter } from '../middlewares/rateLimit.js';
@@ -14,6 +16,8 @@ import { authLimiter } from '../middlewares/rateLimit.js';
 export const router = Router();
 
 router.post('/register', authLimiter, register);
+router.post('/verify-email', authLimiter, verifyEmail);
+router.post('/resend-verification', authLimiter, resendVerificationCode);
 router.post('/login', authLimiter, login);
 router.post('/logout', logout);
 router.post('/refresh', refreshToken);
