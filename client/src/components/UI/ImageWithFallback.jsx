@@ -29,7 +29,7 @@ export default function ImageWithFallback({
       src={src}
       alt={alt}
       loading={loading}
-      fetchPriority={fetchPriority}
+      fetchpriority={fetchPriority}
       onError={() => setFailedSrc(src)}
       className={className}
     />
