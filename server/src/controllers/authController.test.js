@@ -9,9 +9,8 @@ jest.unstable_mockModule('../models/User.js', () => ({
   User: { findOne, findById, create, updateOne },
 }));
 
-const { register, login, logout, refreshToken } = await import('./authController.js');
+const { register, login, logout, refreshToken, getMe } = await import('./authController.js');
 const { User } = await import('../models/User.js');
-const { env } = await import('../config/env.js');
 const { generateRefreshToken, hashRefreshToken } = await import('../utils/token.js');
 
 const makeUser = (overrides = {}) => ({
@@ -86,6 +85,39 @@ describe('authentication and refresh sessions', () => {
     expect(user.refreshTokenHash).toMatch(/^[a-f0-9]{64}$/);
     expect(result.response.cookies.refreshToken.options.httpOnly).toBe(true);
     expect(result.response.cookies.accessToken.options.path).toBe('/');
+  });
+
+  test('normalizes login email and rejects an incorrect password', async () => {
+    const user = makeUser();
+    User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
+
+    const result = await invoke(login, { body: { email: ' ADA@Example.com ', password: 'secret123' } });
+    expect(User.findOne).toHaveBeenCalledWith({ email: 'ada@example.com' });
+    expect(user.comparePassword).toHaveBeenCalledWith('secret123');
+    expect(result.statusCode).toBe(200);
+
+    user.comparePassword.mockResolvedValue(false);
+    await expect(invoke(login, { body: { email: 'ada@example.com', password: 'wrong' } }))
+      .rejects.toMatchObject({ statusCode: 401 });
+  });
+
+  test('returns only the public fields for the current user', async () => {
+    const user = makeUser({
+      passwordHash: 'must-not-be-returned',
+      refreshTokenHash: 'must-not-be-returned',
+    });
+
+    const result = await invoke(getMe, { user });
+    expect(result.body.data.user).toEqual({
+      id: user._id,
+      name: user.name,
+      surname: user.surname,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      addresses: [],
+      newsletterOptIn: false,
+    });
   });
 
   test('rotates refresh tokens and rejects reuse of the prior token', async () => {

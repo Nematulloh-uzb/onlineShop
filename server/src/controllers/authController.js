@@ -10,6 +10,7 @@ import {
   generateRefreshToken,
   hashRefreshToken,
   matchesRefreshToken,
+  refreshCookieOptions,
   sendTokenResponse,
 } from '../utils/token.js';
 import { env } from '../config/env.js';
@@ -80,16 +81,22 @@ export const logout = catchAsync(async (req, res) => {
   const token = req.cookies?.refreshToken || req.body?.refreshToken;
 
   if (typeof token === 'string' && token) {
+    let decoded;
     try {
-      const decoded = jwt.verify(token, env.JWT_REFRESH_SECRET);
-      if (decoded && typeof decoded === 'object' && decoded.id) {
+      decoded = jwt.verify(token, env.JWT_REFRESH_SECRET);
+    } catch {
+      // Logout remains successful even when the presented token is expired or invalid.
+    }
+    if (decoded && typeof decoded === 'object' && decoded.id) {
+      try {
         await User.updateOne(
           { _id: decoded.id, refreshTokenHash: hashRefreshToken(token) },
           { $unset: { refreshTokenHash: 1 } }
         );
+      } catch (error) {
+        clearAuthCookies(res);
+        throw error;
       }
-    } catch {
-      // Logout remains successful even when the presented token is expired or invalid.
     }
   }
 
@@ -133,13 +140,7 @@ export const refreshToken = catchAsync(async (req, res, next) => {
   user.refreshTokenHash = hashRefreshToken(newRefreshToken);
   await user.save({ validateBeforeSave: false });
 
-  res.cookie('refreshToken', newRefreshToken, {
-    httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
-    path: '/',
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-  });
+  res.cookie('refreshToken', newRefreshToken, refreshCookieOptions());
   res.cookie('accessToken', newAccessToken, accessCookieOptions());
 
   res.status(200).json({

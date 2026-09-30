@@ -36,6 +36,11 @@ export const accessCookieOptions = () => ({
   expires: new Date(Date.now() + 15 * 60 * 1000),
 });
 
+export const refreshCookieOptions = () => ({
+  ...authCookieOptions,
+  expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+});
+
 export const clearAuthCookies = (res) => {
   res.clearCookie('accessToken', authCookieOptions);
   res.clearCookie('refreshToken', authCookieOptions);
@@ -48,10 +53,7 @@ export const sendTokenResponse = async (user, statusCode, res) => {
   user.refreshTokenHash = hashRefreshToken(refreshToken);
   await user.save({ validateBeforeSave: false });
 
-  res.cookie('refreshToken', refreshToken, {
-    ...authCookieOptions,
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-  });
+  res.cookie('refreshToken', refreshToken, refreshCookieOptions());
   res.cookie('accessToken', accessToken, accessCookieOptions());
 
   const userData = {
