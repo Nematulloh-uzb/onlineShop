@@ -15,9 +15,9 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const request = error.config;
-    const isAuthRequest = request?.url?.includes('/auth/');
+    const isAuthActionRequest = /\/auth\/(login|register|refresh|logout)/.test(request?.url || '');
 
-    if (error.response?.status !== 401 || !request || request._retry || isAuthRequest) {
+    if (error.response?.status !== 401 || !request || request._retry || isAuthActionRequest) {
       return Promise.reject(error);
     }
 

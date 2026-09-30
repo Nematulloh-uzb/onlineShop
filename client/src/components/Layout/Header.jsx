@@ -1,10 +1,23 @@
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { api } from '../../lib/api.js';
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const { user, status } = useAuth();
+  const cartQuery = useQuery({
+    queryKey: ['cart'],
+    queryFn: async () => {
+      const { data } = await api.get('/cart');
+      return data.data.cart;
+    },
+    enabled: status === 'authenticated',
+  });
+  const cartCount = cartQuery.data?.items?.reduce((count, item) => count + item.quantity, 0) || 0;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -76,18 +89,24 @@ export default function Header() {
           </Link>
 
           <Link
-            to="/savat"
+            to={user ? '/savat' : '/kirish'}
             aria-label="Savat"
             className="relative w-10 h-10 flex items-center justify-center rounded-full text-[#6B6B6B] hover:text-[#1A1A1A] hover:bg-[#F0EDED] transition-all"
           >
             <span className="material-symbols-outlined text-[22px]">shopping_bag</span>
+            {cartCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#56642B] px-1 font-['Inter'] text-[10px] font-bold text-white">
+                {cartCount}
+              </span>
+            )}
           </Link>
 
           <Link
-            to="/kirish"
+            to={user ? '/profil' : '/kirish'}
+            aria-label={user ? 'Shaxsiy kabinet' : 'Kirish'}
             className="hidden sm:flex w-10 h-10 items-center justify-center rounded-full bg-[#8A9A5B] hover:bg-[#6E7A47] transition-colors"
           >
-            <span className="material-symbols-outlined text-white text-[18px]">person</span>
+            <span className="material-symbols-outlined text-white text-[18px]">{user ? 'account_circle' : 'person'}</span>
           </Link>
 
           {/* Mobile menu toggle */}
@@ -126,11 +145,11 @@ export default function Header() {
             </NavLink>
           ))}
           <NavLink
-            to="/kirish"
+            to={user ? '/profil' : '/kirish'}
             onClick={() => setMobileOpen(false)}
             className="py-2 px-3 rounded-lg font-['Inter'] text-[14px] font-semibold text-[#6B6B6B] hover:bg-[#F0EDED] transition-colors"
           >
-            Kirish
+            {user ? 'Shaxsiy kabinet' : 'Kirish'}
           </NavLink>
         </nav>
       )}

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
@@ -17,6 +18,7 @@ const formatDate = (date) => new Intl.DateTimeFormat('uz-UZ', {
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [logoutError, setLogoutError] = useState('');
   const ordersQuery = useQuery({
     queryKey: ['my-orders'],
     queryFn: async () => {
@@ -26,11 +28,12 @@ export default function ProfilePage() {
   });
 
   const handleLogout = async () => {
+    setLogoutError('');
     try {
       await logout();
       navigate('/', { replace: true });
     } catch (error) {
-      ordersQuery.refetch();
+      setLogoutError(getApiErrorMessage(error, 'Tizimdan chiqishda xatolik yuz berdi.'));
     }
   };
 
@@ -104,6 +107,11 @@ export default function ProfilePage() {
           </aside>
 
           <section className="lg:col-span-2">
+            {logoutError && (
+              <p role="alert" className="mb-4 rounded-lg bg-red-50 px-4 py-3 font-['Inter'] text-sm text-red-700">
+                {logoutError}
+              </p>
+            )}
             <div className="mb-5 flex items-end justify-between gap-3">
               <div>
                 <h2 className="font-['Playfair_Display'] text-2xl font-bold text-[#1A1A1A]">Buyurtmalarim</h2>
