@@ -163,6 +163,7 @@ export const getMe = catchAsync(async (req, res) => {
         surname: req.user.surname,
         email: req.user.email,
         phone: req.user.phone,
+        avatarUrl: req.user.avatarUrl || '',
         role: req.user.role,
         addresses: req.user.addresses || [],
         newsletterOptIn: req.user.newsletterOptIn,

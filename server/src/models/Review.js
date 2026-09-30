@@ -64,7 +64,7 @@ reviewSchema.statics.calculateAverageRating = async function (productId) {
   } else {
     await Product.findByIdAndUpdate(productId, {
       ratingCount: 0,
-      ratingAverage: 5.0,
+      ratingAverage: 0,
     });
   }
 };

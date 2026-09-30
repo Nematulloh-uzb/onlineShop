@@ -131,8 +131,8 @@ const productSchema = new mongoose.Schema(
     },
     ratingAverage: {
       type: Number,
-      default: 5.0,
-      min: [1, 'Reyting kamida 1 bo‘lishi kerak'],
+      default: 0,
+      min: [0, 'Reyting manfiy bo‘lishi mumkin emas'],
       max: [5, 'Reyting ko‘pi bilan 5 bo‘lishi kerak'],
       set: (val) => Math.round(val * 10) / 10,
     },

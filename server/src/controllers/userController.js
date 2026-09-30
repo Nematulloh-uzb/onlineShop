@@ -1,11 +1,34 @@
 import bcrypt from 'bcryptjs';
+import { unlink } from 'node:fs/promises';
+import path from 'node:path';
 import { User } from '../models/User.js';
 import { ApiError } from '../utils/ApiError.js';
 import { catchAsync } from '../utils/catchAsync.js';
 
+const getPublicUser = (user) => ({
+  id: user._id,
+  name: user.name,
+  surname: user.surname,
+  email: user.email,
+  phone: user.phone,
+  avatarUrl: user.avatarUrl || '',
+  role: user.role,
+  addresses: user.addresses || [],
+  newsletterOptIn: user.newsletterOptIn,
+});
+
+const removePreviousAvatar = async (userId, avatarUrl) => {
+  if (!avatarUrl) return;
+  const filename = path.basename(avatarUrl);
+  if (!filename.startsWith(`profile-${userId}-`)) return;
+  await unlink(path.resolve('uploads', filename)).catch((error) => {
+    if (error.code !== 'ENOENT') throw error;
+  });
+};
+
 // Profil ma'lumotlarini yangilash
 export const updateMe = catchAsync(async (req, res, next) => {
-  const { name, surname, phone, newsletterOptIn } = req.body;
+  const { name, surname, phone, newsletterOptIn } = req.body || {};
 
   const updatedUser = await User.findByIdAndUpdate(
     req.user._id,
@@ -23,6 +46,34 @@ export const updateMe = catchAsync(async (req, res, next) => {
     data: {
       user: updatedUser,
     },
+  });
+});
+
+export const updateAvatar = catchAsync(async (req, res, next) => {
+  if (!req.file) {
+    return next(new ApiError(400, 'Yuklash uchun profil rasmini tanlang'));
+  }
+
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    await unlink(req.file.path).catch(() => {});
+    return next(new ApiError(404, 'Foydalanuvchi topilmadi'));
+  }
+
+  const previousAvatarUrl = user.avatarUrl;
+  user.avatarUrl = `/uploads/${req.file.filename}`;
+  try {
+    await user.save();
+    await removePreviousAvatar(user._id, previousAvatarUrl);
+  } catch (error) {
+    await unlink(req.file.path).catch(() => {});
+    throw error;
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Profil rasmi yangilandi',
+    data: { user: getPublicUser(user) },
   });
 });
 

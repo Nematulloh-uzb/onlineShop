@@ -62,6 +62,7 @@ export const sendTokenResponse = async (user, statusCode, res) => {
     surname: user.surname,
     email: user.email,
     phone: user.phone,
+    avatarUrl: user.avatarUrl || '',
     role: user.role,
     addresses: user.addresses || [],
     newsletterOptIn: user.newsletterOptIn,
