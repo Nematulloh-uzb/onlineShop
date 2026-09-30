@@ -1,0 +1,42 @@
+export const categoriesData = [
+  {
+    name: 'Ayollar',
+    slug: 'ayollar',
+    description: 'Nafis, tabiiy va ekologik toza ayollar kiyimlari kolleksiyasi',
+    image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&auto=format&fit=crop&q=80',
+    order: 1,
+    isActive: true,
+  },
+  {
+    name: 'Erkaklar',
+    slug: 'erkaklar',
+    description: 'Klassik va zamonaviy organik erkaklar liboslari',
+    image: 'https://images.unsplash.com/photo-1490578474895-699bc4e2cf59?w=800&auto=format&fit=crop&q=80',
+    order: 2,
+    isActive: true,
+  },
+  {
+    name: 'Aksessuarlar',
+    slug: 'aksessuarlar',
+    description: 'Tabiiy mato va eko-materiallardan tayyorlangan hashamatli aksessuarlar',
+    image: 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=800&auto=format&fit=crop&q=80',
+    order: 3,
+    isActive: true,
+  },
+  {
+    name: 'Yangi kelganlar',
+    slug: 'yangi-kelganlar',
+    description: 'Aura brendining eng so‘nggi barqaror fasl liboslari',
+    image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&auto=format&fit=crop&q=80',
+    order: 4,
+    isActive: true,
+  },
+  {
+    name: 'Chegirmalar',
+    slug: 'chegirmalar',
+    description: 'Maxsus mavsumiy chegirmadagi eksklyuziv eko-liboslar',
+    image: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=800&auto=format&fit=crop&q=80',
+    order: 5,
+    isActive: true,
+  },
+];

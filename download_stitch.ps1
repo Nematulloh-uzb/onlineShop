@@ -1,0 +1,19 @@
+$downloads = @(
+  @{ out = "stitch_assets/01_mahsulot_sahifasi.png"; url = 'https://lh3.googleusercontent.com/aida/AEtjO1VmNkEM51A7pn0nqJ02vJmG4ebywz-RnJIZdMtS_gCVixCwJDOlDjOhhGcl6bSJAGecSVbDKPLYA3PHwZKQ1lNiFCSyk1tecy8G_ghgfs6D2HyA3Lm66ajoET9jCSCDLxHssdOcjcL15x4I_z9umBH9RytjIpRptLzlivQqU-iisSdZ3Y-87jMu6g1w1W9Ji9NkvA9Qz1gR9uwidOCRcHkVPff9XRsWxSgryWrotYSJ_CqumeEl8c_R6TxZ' },
+  @{ out = "stitch_assets/01_mahsulot_sahifasi.html"; url = 'https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzAwMDY1Y2IwNTAyYmU1OWQwMjNiZTlmNTQxMGIyNTRiEgsSBxD-lZqq-QMYAZIBJAoKcHJvamVjdF9pZBIWQhQxNzAzMDk5NTIzMDYzNjExNzM3OQ&filename=&opi=89354086' },
+  @{ out = "stitch_assets/02_bosh_sahifa.png"; url = 'https://lh3.googleusercontent.com/aida/AEtjO1Vnu4YOMwI-W4TGfPWdntgEvLdKOKWxYzLBYFlRQ7jB7Krj3PbzKA500dhgG1fLx-Xc6nXc83ylKElBZAn4DjXxVy4duviiNbtKkxxPqWeOPmapoZUmSKLZblnuKZeR4BArFMyeahFe8TAI2G5_KQ83hKM2ye4dXaRwy-kcfNEenCtsCuS4k4IEoNt-qBHf2fjKxZvqh6GFANrimZL0OQxWbhnqaJMZPg9WW_6cvE_i-lZTL0_H7KaUjKfT' },
+  @{ out = "stitch_assets/02_bosh_sahifa.html"; url = 'https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzAwMDY1Y2IwNTJjYTIyZDYwNWYxMTg4YWNlMjY4YThhEgsSBxD-lZqq-QMYAZIBJAoKcHJvamVjdF9pZBIWQhQxNzAzMDk5NTIzMDYzNjExNzM3OQ&filename=&opi=89354086' },
+  @{ out = "stitch_assets/03_katalog_sahifasi.png"; url = 'https://lh3.googleusercontent.com/aida/AEtjO1UrZXONjvarCFQhBhmwRI3Ia9PWEYj0svEk479bJM0jxEd3r8kWH4R1Rf5--rjBkJuuJgw5M_W2p7Kd_50I1k6FJEdhhuhixqATA9dy6ikWcm7MnR7B7HYV2BXITXjDNAP2kGVjjuocEFUefyp4hOemV8Bc7WgOBGGtHXJ8eWz1HFk5RiYjtGkmcn6fLYv56Cu4dGy2eVd-G9bGuGEYWvzaUjAqWCq4VX92mGe46F_U9CNgReN1-UyoCAZz' },
+  @{ out = "stitch_assets/03_katalog_sahifasi.html"; url = 'https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzAwMDY1Y2IwNGZmYTAwZDMwNDc5ZjRhZDRhMWI2MjI0EgsSBxD-lZqq-QMYAZIBJAoKcHJvamVjdF9pZBIWQhQxNzAzMDk5NTIzMDYzNjExNzM3OQ&filename=&opi=89354086' },
+  @{ out = "stitch_assets/04_tolov_sahifasi.png"; url = 'https://lh3.googleusercontent.com/aida/AEtjO1VFMeNdjL2pWYgxl5TuHN9U0B1bhfp5hd4duE8U93emeaYwiDMLi8Ili3Y-ovXf8SxNW4lbi1AQgVpYPKmwCHKOD-KrsRg9eMVU-2k4O2zQZZdvIphLt0LUjuUDNiGtiI2Dps2Ay6SKW70AIHV01arjGGH7F5hULHWvqcwXy23eALXDLZoTTeYKfJXwmrrblT_OzqyTEudu8bbvNmm4H4z-8LOcayZfAai8-Z9M1nF1Fwxnpy0QCpggjfYT' },
+  @{ out = "stitch_assets/04_tolov_sahifasi.html"; url = 'https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzAwMDY1Y2IwNjBlZTdjNGEwNzNhZTExYTUxM2IwOTY1EgsSBxD-lZqq-QMYAZIBJAoKcHJvamVjdF9pZBIWQhQxNzAzMDk5NTIzMDYzNjExNzM3OQ&filename=&opi=89354086' },
+  @{ out = "stitch_assets/05_logo.png"; url = 'https://lh3.googleusercontent.com/aida/AEtjO1X4EO2oXgwe63HA6sL-G8eycUStJYf3mUf4EmVu8CQp7xHSrgdUdogt6etKk3AMyVW-FvHgnTQYTNh7QzZnv5r38CFAJKKRPr037plKrPuiFw8MOYfZe3LdlKF4zfdMvEi7Y0x_oM4XK3E0nAKRoT_1nfDS7W6aRY46fFEmicI44cz9uCszVOkP_590j3TivxkmTJE1NPcOJzjHPMvABcVtmrSxjt2oNN1orOvGFkmiZngA8WdyNXOspCYx' },
+  @{ out = "stitch_assets/06_savat_sahifasi.png"; url = 'https://lh3.googleusercontent.com/aida/AEtjO1UKraX0MV9eTpU9Vi-2n5VM9-qP3L2TEuHd0qVXZstaqcxbqPXbPoK_ha-kQgefOtcAM39cw-a18l99zeRGIxz-85SCVO7wbmITBFuaCfn3cU-Juum1LERWwR-U3YLh3PptpcvC-JfzwVzz_PXMl4Dop3X91Mmg_BI6Zf0MpKhu-_BAHZH7fn1WT_kZShwImzqRcksAePuZVttg5wdCQU28pXEvqBfvp4bzdOnLrfc2K5mRyV24gl_4yUE' },
+  @{ out = "stitch_assets/06_savat_sahifasi.html"; url = 'https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzAwMDY1Y2IwNGZkYTc3ZjYwNDc5ZjRhZDRhMWI2MjI0EgsSBxD-lZqq-QMYAZIBJAoKcHJvamVjdF9pZBIWQhQxNzAzMDk5NTIzMDYzNjExNzM3OQ&filename=&opi=89354086' }
+)
+
+foreach ($item in $downloads) {
+  Write-Host "Downloading $($item.out)..."
+  curl.exe -L -s -o $item.out $item.url
+}
+Write-Host "All downloads complete!"

@@ -1,0 +1,91 @@
+/* Tipografiya sinflari va uslublari */
+.font-display-lg {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 36px;
+  line-height: 44px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 768px) {
+  .font-display-lg {
+    font-size: 56px;
+    line-height: 68px;
+    letter-spacing: -0.02em;
+  }
+}
+
+.font-headline-lg {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 768px) {
+  .font-headline-lg {
+    font-size: 40px;
+    line-height: 48px;
+  }
+}
+
+.font-headline-md {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 500;
+}
+
+.font-headline-sm {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 22px;
+  line-height: 30px;
+  font-weight: 500;
+}
+
+.font-body-lg {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 400;
+}
+
+.font-body-md {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+}
+
+.font-body-sm {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+}
+
+.font-label-lg {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.font-label-md {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.font-label-caps {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}

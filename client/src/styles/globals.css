@@ -1,0 +1,86 @@
+@import './tokens.css';
+@import './typography.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--color-text);
+    background-color: var(--color-bg);
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  #root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', Georgia, serif;
+    color: var(--color-text);
+    font-weight: 600;
+  }
+}
+
+/* Maxsus komponentlar va yordamchilar */
+.eco-impact-box {
+  background-color: var(--color-primary-tint);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+
+/* Maxsus chip stili: faol bo'lmaganda va faol bo'lganda */
+.aura-chip {
+  height: 36px;
+  border-radius: var(--radius-xl);
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.aura-chip:hover {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+.aura-chip.active {
+  background-color: var(--color-primary-tint);
+  border-color: var(--color-primary);
+  color: var(--color-primary-hover);
+  font-weight: 600;
+}
+
+/* Modal va Drawer backdrop */
+.aura-backdrop {
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Doimiy fokus ko'rsatkichi */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(138, 154, 91, 0.35);
+}
