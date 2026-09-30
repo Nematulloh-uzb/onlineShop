@@ -12,6 +12,11 @@ export const getProductReviews = catchAsync(async (req, res, next) => {
     return next(new ApiError(400, 'Mahsulot identifikatori noto‘g‘ri'));
   }
 
+  const productExists = await Product.exists({ _id: id, isActive: true, gender: 'erkaklar' });
+  if (!productExists) {
+    return next(new ApiError(404, 'Mahsulot topilmadi'));
+  }
+
   const reviews = await Review.find({ product: id })
     .populate('user', 'name surname')
     .sort('-createdAt');
@@ -46,7 +51,7 @@ export const createReview = catchAsync(async (req, res, next) => {
     return next(new ApiError(400, 'Baho, sarlavha va sharh matnini to‘g‘ri kiriting'));
   }
 
-  const product = await Product.findOne({ _id: id, isActive: true });
+  const product = await Product.findOne({ _id: id, isActive: true, gender: 'erkaklar' });
   if (!product) {
     return next(new ApiError(404, 'Mahsulot topilmadi'));
   }

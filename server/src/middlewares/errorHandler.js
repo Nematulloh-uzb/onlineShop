@@ -26,6 +26,13 @@ export const errorHandler = (err, req, res, next) => {
     error = new ApiError(400, message, messages);
   }
 
+  if (err.name === 'MulterError') {
+    const message = err.code === 'LIMIT_FILE_SIZE'
+      ? 'Rasm hajmi 5 MB dan oshmasligi kerak'
+      : 'Rasm faylini yuklash so‘rovi noto‘g‘ri';
+    error = new ApiError(400, message);
+  }
+
   // JWT xatoliklari
   if (err.name === 'JsonWebTokenError') {
     error = new ApiError(401, 'Yaroqsiz xavfsizlik tokeni');

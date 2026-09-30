@@ -73,11 +73,12 @@ const seedDatabase = async () => {
                 category,
                 gender: 'erkaklar',
                 isActive: true,
-                ratingAverage: 5,
+                ratingAverage: 0,
                 ratingCount: 0,
                 soldCount: 0,
               },
             },
+            upsert: true,
           },
         };
       })

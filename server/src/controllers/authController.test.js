@@ -115,6 +115,7 @@ describe('authentication and refresh sessions', () => {
       surname: user.surname,
       email: user.email,
       phone: user.phone,
+      avatarUrl: '',
       role: user.role,
       addresses: [],
       newsletterOptIn: false,

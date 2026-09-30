@@ -29,22 +29,21 @@ export default function HomePage() {
   });
 
   const categories = (categoriesQuery.data || [])
-    .filter(({ slug }) => ['ayollar', 'erkaklar', 'aksessuarlar'].includes(slug))
-    .slice(0, 3);
+    .filter(({ slug }) => ['erkaklar', 'aksessuarlar'].includes(slug));
 
   return (
     <>
       <Helmet>
-        <title>AURA — Ongli tanlov, uzoq xizmat</title>
+        <title>AURA Men — Erkaklar kolleksiyasi</title>
         <meta
           name="description"
-          content="Tabiiy materiallardan yaratilgan AURA kiyimlari. Kolleksiyani ko‘ring va o‘zingizga mos mahsulotni toping."
+          content="AURA erkaklar kolleksiyasi: puxta materiallar, zamonaviy bichim va kundalik uslubga mos aksessuarlar."
         />
       </Helmet>
 
       <section className="relative isolate flex min-h-[660px] items-center overflow-hidden bg-[#263326] lg:min-h-[760px]">
         <ImageWithFallback
-          src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=2200&auto=format&fit=crop&q=85"
+          src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=2000&auto=format&fit=crop&q=85"
           alt=""
           fetchPriority="high"
           className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
@@ -56,27 +55,27 @@ export default function HomePage() {
           <div className="min-w-0 max-w-2xl text-white">
             <p className="mb-5 inline-flex max-w-full flex-wrap items-center gap-2 font-['Inter'] text-xs font-semibold uppercase tracking-[0.12em] md:tracking-[0.2em] text-[#E2E8D1]">
               <Leaf size={16} aria-hidden="true" />
-              Tabiiy materiallar · O‘ylangan dizayn
+              Erkaklar kolleksiyasi · AURA
             </p>
             <h1 className="font-['Playfair_Display'] text-5xl font-medium leading-[1.08] text-white md:text-7xl">
-              Kamroq, yaxshiroq va uzoqroq.
+              Uslubingiz. Qoidangiz.
             </h1>
             <p className="mt-6 max-w-xl font-['Inter'] text-base leading-7 text-white/85 md:text-lg">
-              Kundalik hayot uchun qulay, puxta tanlangan materiallardan yaratilgan liboslar. O‘zingizga mos kolleksiyani kashf eting.
+              Kundalikdan klassik uslubgacha — o‘zingizga mos erkaklar kiyimi va aksessuarlarini kashf eting.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Link
                 to="/katalog"
                 className="inline-flex h-14 items-center justify-center gap-2 rounded-lg bg-[#8A9A5B] px-7 font-['Inter'] text-sm font-semibold text-white transition-colors hover:bg-[#6E7A47]"
               >
-                Kolleksiyani ko‘rish
+                Erkaklar kolleksiyasi
                 <ArrowRight size={18} aria-hidden="true" />
               </Link>
               <a
                 href="#bizning-tamoyillar"
                 className="inline-flex h-14 items-center justify-center rounded-lg border border-white/60 px-7 font-['Inter'] text-sm font-semibold text-white transition-colors hover:bg-white/10"
               >
-                Bizning yondashuv
+                Bizning tanlov
               </a>
             </div>
           </div>
@@ -96,14 +95,14 @@ export default function HomePage() {
           <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
               <p className="mb-2 font-['Inter'] text-xs font-semibold uppercase tracking-[0.16em] text-[#71814B]">
-                O‘zingizga mosini toping
+                AURA erkaklar kolleksiyasi
               </p>
               <h2 className="font-['Playfair_Display'] text-3xl font-semibold text-[#1A1A1A] md:text-4xl">
-                Kategoriyalar
+                Uslubingizni tanlang
               </h2>
             </div>
             <Link to="/katalog" className="inline-flex items-center gap-2 font-['Inter'] text-sm font-semibold text-[#56642B] hover:text-[#8A9A5B]">
-              Barcha mahsulotlar
+              Erkaklar kolleksiyasi
               <ArrowRight size={17} aria-hidden="true" />
             </Link>
           </div>
@@ -156,7 +155,7 @@ export default function HomePage() {
                 Ko‘p tanlangan
               </p>
               <h2 className="font-['Playfair_Display'] text-3xl font-semibold text-[#1A1A1A] md:text-4xl">
-                Kolleksiyadan tanlov
+                Erkaklar uchun tanlangan
               </h2>
             </div>
             <Link to="/katalog" className="inline-flex items-center gap-2 font-['Inter'] text-sm font-semibold text-[#56642B] hover:text-[#8A9A5B]">

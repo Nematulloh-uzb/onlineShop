@@ -2,9 +2,14 @@ import { Category } from '../models/Category.js';
 import { ApiError } from '../utils/ApiError.js';
 import { catchAsync } from '../utils/catchAsync.js';
 
+const publicCategorySlugs = ['erkaklar', 'aksessuarlar'];
+
 // Barcha faol toifalarni olish
 export const getCategories = catchAsync(async (req, res) => {
-  const categories = await Category.find({ isActive: true }).sort('order');
+  const categories = await Category.find({
+    isActive: true,
+    slug: { $in: publicCategorySlugs },
+  }).sort('order');
 
   res.status(200).json({
     success: true,
@@ -17,7 +22,9 @@ export const getCategories = catchAsync(async (req, res) => {
 // Toifani slug bo'yicha olish
 export const getCategoryBySlug = catchAsync(async (req, res, next) => {
   const { slug } = req.params;
-  const category = await Category.findOne({ slug, isActive: true });
+  const category = publicCategorySlugs.includes(slug)
+    ? await Category.findOne({ slug, isActive: true })
+    : null;
 
   if (!category) {
     return next(new ApiError(404, 'Toifa topilmadi'));

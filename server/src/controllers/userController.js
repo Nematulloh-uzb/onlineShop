@@ -17,13 +17,19 @@ const getPublicUser = (user) => ({
   newsletterOptIn: user.newsletterOptIn,
 });
 
+const removeUploadedFile = async (filePath) => {
+  try {
+    await unlink(filePath);
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
+};
+
 const removePreviousAvatar = async (userId, avatarUrl) => {
   if (!avatarUrl) return;
   const filename = path.basename(avatarUrl);
   if (!filename.startsWith(`profile-${userId}-`)) return;
-  await unlink(path.resolve('uploads', filename)).catch((error) => {
-    if (error.code !== 'ENOENT') throw error;
-  });
+  await removeUploadedFile(path.resolve('uploads', filename));
 };
 
 // Profil ma'lumotlarini yangilash
@@ -40,11 +46,14 @@ export const updateMe = catchAsync(async (req, res, next) => {
     },
     { new: true, runValidators: true }
   );
+  if (!updatedUser) {
+    return next(new ApiError(404, 'Foydalanuvchi topilmadi'));
+  }
 
   res.status(200).json({
     success: true,
     data: {
-      user: updatedUser,
+      user: getPublicUser(updatedUser),
     },
   });
 });
@@ -56,7 +65,7 @@ export const updateAvatar = catchAsync(async (req, res, next) => {
 
   const user = await User.findById(req.user._id);
   if (!user) {
-    await unlink(req.file.path).catch(() => {});
+    await removeUploadedFile(req.file.path);
     return next(new ApiError(404, 'Foydalanuvchi topilmadi'));
   }
 
@@ -64,10 +73,14 @@ export const updateAvatar = catchAsync(async (req, res, next) => {
   user.avatarUrl = `/uploads/${req.file.filename}`;
   try {
     await user.save();
+  } catch (error) {
+    await removeUploadedFile(req.file.path);
+    throw error;
+  }
+  try {
     await removePreviousAvatar(user._id, previousAvatarUrl);
   } catch (error) {
-    await unlink(req.file.path).catch(() => {});
-    throw error;
+    console.error('[Profile] Avvalgi profil rasmini o‘chirish amalga oshmadi:', error);
   }
 
   res.status(200).json({
@@ -79,7 +92,7 @@ export const updateAvatar = catchAsync(async (req, res, next) => {
 
 // Parolni o'zgartirish
 export const changePassword = catchAsync(async (req, res, next) => {
-  const { currentPassword, newPassword } = req.body;
+  const { currentPassword, newPassword } = req.body || {};
 
   if (!currentPassword || !newPassword) {
     return next(new ApiError(400, 'Joriy va yangi parolni kiriting'));
@@ -90,6 +103,9 @@ export const changePassword = catchAsync(async (req, res, next) => {
   }
 
   const user = await User.findById(req.user._id).select('+passwordHash');
+  if (!user) {
+    return next(new ApiError(404, 'Foydalanuvchi topilmadi'));
+  }
   const isMatch = await user.comparePassword(currentPassword);
   if (!isMatch) {
     return next(new ApiError(401, 'Joriy parol noto‘g‘ri kiritildi'));

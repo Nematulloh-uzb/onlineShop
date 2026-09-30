@@ -22,12 +22,11 @@ export default function Footer() {
               Katalog
             </h2>
             <ul className="space-y-3">
-              {[
-                ['Ayollar kiyimi', '/katalog/ayollar'],
-                ['Erkaklar kiyimi', '/katalog/erkaklar'],
-                ['Aksessuarlar', '/katalog/aksessuarlar'],
-                ['Barcha mahsulotlar', '/katalog'],
-              ].map(([label, path]) => (
+            {[
+              ['Erkaklar kiyimi', '/katalog/erkaklar'],
+              ['Aksessuarlar', '/katalog/aksessuarlar'],
+              ['Barcha erkaklar mahsulotlari', '/katalog'],
+            ].map(([label, path]) => (
                 <li key={path}>
                   <Link to={path} className="font-['Inter'] text-sm text-white/65 transition-colors hover:text-white">
                     {label}

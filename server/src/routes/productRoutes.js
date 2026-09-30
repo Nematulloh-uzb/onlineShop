@@ -11,7 +11,7 @@ import {
 } from '../controllers/productController.js';
 import { protect } from '../middlewares/auth.js';
 import { restrictTo } from '../middlewares/role.js';
-import { upload } from '../middlewares/upload.js';
+import { upload, validateUploadedImage } from '../middlewares/upload.js';
 
 export const router = Router();
 
@@ -24,4 +24,4 @@ router.get('/:slug/related', getRelatedProducts);
 router.post('/', protect, restrictTo('admin'), createProduct);
 router.put('/:id', protect, restrictTo('admin'), updateProduct);
 router.delete('/:id', protect, restrictTo('admin'), deleteProduct);
-router.post('/upload-image', protect, restrictTo('admin'), upload.single('image'), uploadProductImage);
+router.post('/upload-image', protect, restrictTo('admin'), upload.single('image'), validateUploadedImage, uploadProductImage);

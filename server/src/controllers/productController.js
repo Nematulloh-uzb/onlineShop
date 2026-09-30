@@ -10,7 +10,6 @@ export const getProducts = catchAsync(async (req, res) => {
     limit = 12,
     sort = 'yangi',
     category,
-    gender,
     minPrice,
     maxPrice,
     size,

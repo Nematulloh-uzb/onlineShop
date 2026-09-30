@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Camera, LoaderCircle, Upload, X } from 'lucide-react';
-import { useMutation } from '@tanstack/react-query';
-import { useQuery } from '@tanstack/react-query';
+import { Camera, LoaderCircle, Upload } from 'lucide-react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';

@@ -8,7 +8,6 @@ import { api, getApiErrorMessage } from '../lib/api.js';
 
 const FILTERS = [
   { label: 'Barchasi', slug: '' },
-  { label: 'Ayollar', slug: 'ayollar' },
   { label: 'Erkaklar', slug: 'erkaklar' },
   { label: 'Aksessuarlar', slug: 'aksessuarlar' },
 ];
@@ -39,6 +38,12 @@ export default function CatalogPage() {
   const sortBy = SORT_OPTIONS.some(({ value }) => value === requestedSort)
     ? requestedSort
     : 'yangi';
+
+  useEffect(() => {
+    if (categorySlug && !categoryIsValid) {
+      navigate('/katalog', { replace: true });
+    }
+  }, [categoryIsValid, categorySlug, navigate]);
 
   useEffect(() => {
     if (searchParams.has('search') && document.activeElement !== searchInput.current) {
@@ -90,7 +95,7 @@ export default function CatalogPage() {
     <>
       <Helmet>
         <title>{activeFilter === 'Barchasi' ? 'Katalog' : activeFilter} — AURA</title>
-        <meta name="description" content="AURA ekologik moda kolleksiyasidan sifatli kiyim va aksessuarlarni toping." />
+        <meta name="description" content="AURA erkaklar kiyimi va aksessuarlari: zamonaviy uslub, puxta materiallar va o‘ylangan tanlov." />
       </Helmet>
 
       <div className="mx-auto max-w-[1280px] px-6 py-10 md:px-10">
@@ -102,7 +107,7 @@ export default function CatalogPage() {
             {activeFilter === 'Barchasi' ? 'Barcha mahsulotlar' : activeFilter}
           </h1>
           <p className="mt-3 max-w-2xl font-['Inter'] text-sm leading-relaxed text-[#6B6B6B]">
-            Kundalik qulaylik va uzoq xizmat qiladigan tabiiy materiallardan tanlang.
+            Erkaklar uchun kundalik qulaylik va uzoq xizmat qiladigan puxta tanlangan kiyimlar.
           </p>
         </div>
 
