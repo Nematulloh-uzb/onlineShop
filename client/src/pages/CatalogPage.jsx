@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 const PRODUCTS = [
   { name: "Zig'ir ko'ylak", price: '$120.00', category: 'Ayollar', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCbZfRhZ8ljS3J5KLjchqPNfMObsBefdPxBvT9ITDFx7nIxczO63NxOvhsXNdY8lGY-553Ro2-MX18QjtHwaPSJAjDYvwj-ERsbhXTrrOiXPOG7tAtkJTWUSo0YlrN-_zbyhBfq1ZwsO4bjbtQv5E-i4ZFNuNkqEQYQvdZztgKCeNL_S5kMCLGtlwfYsbF5D4LQbdVYiUdbaezLBKZa9M54-uIW0gHkQHjnUgSm86zxX24HkN5voOkvnQ', slug: 'zigir-koylak' },
@@ -13,16 +13,80 @@ const PRODUCTS = [
   { name: "Yozgi ko'ylak", price: '$135.00', category: 'Ayollar', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBmHkcCf9qRIQha12NFPqS_FLd5RVoHQAmRviyJ4LYi0nO4RtvQ_QbqJ-XI_mf9w1xMM3d03DMTG84CT6zgfjOP5G_AW9n4PrieHMg-kXBVPXzZwWZ8YF-atI8evtIvmyXDEnehSVl4lc9RzWJ7_SqSTNWSvhCDfm4lskRbbUWaNmXWKgVFf1eQBXmi9VJFCdCkrGugPcJK0nQByQa26uQ1TbPzJ4aHHOpO3j5y963dyK4GvQkUfSguAg', slug: 'yozgi-koylak' },
 ];
 
-const FILTERS = ['Barchasi', 'Ayollar', 'Erkaklar', 'Aksessuarlar'];
-const SORT_OPTIONS = ["Yangilar", "Narx: kamdan ko'p", "Narx: ko'pdan kam"];
+const FILTERS = [
+  { label: 'Barchasi', slug: '' },
+  { label: 'Ayollar', slug: 'ayollar' },
+  { label: 'Erkaklar', slug: 'erkaklar' },
+  { label: 'Aksessuarlar', slug: 'aksessuarlar' },
+];
+const SORT_OPTIONS = [
+  { label: 'Yangilar', value: 'newest' },
+  { label: "Narx: kamdan ko'p", value: 'price-ascending' },
+  { label: "Narx: ko'pdan kam", value: 'price-descending' },
+];
+const CATEGORY_BY_SLUG = Object.fromEntries(
+  FILTERS.filter(({ slug }) => slug).map(({ label, slug }) => [slug, label])
+);
 
 export default function CatalogPage() {
-  const [activeFilter, setActiveFilter] = useState('Barchasi');
-  const [sortBy, setSortBy] = useState('Yangilar');
+  const { categorySlug } = useParams();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchInput = useRef(null);
+  const activeFilter = CATEGORY_BY_SLUG[categorySlug] || 'Barchasi';
+  const searchQuery = searchParams.get('search') || '';
+  const requestedSort = searchParams.get('sort');
+  const sortBy = SORT_OPTIONS.some(({ value }) => value === requestedSort)
+    ? requestedSort
+    : 'newest';
 
-  const filtered = PRODUCTS.filter(
-    (p) => activeFilter === 'Barchasi' || p.category === activeFilter
-  );
+  useEffect(() => {
+    if (searchParams.has('search') && document.activeElement !== searchInput.current) {
+      searchInput.current?.focus();
+    }
+  }, [searchParams]);
+
+  const filtered = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLocaleLowerCase();
+    const results = PRODUCTS.filter((product) => {
+      const matchesCategory = activeFilter === 'Barchasi' || product.category === activeFilter;
+      const matchesSearch = !normalizedQuery
+        || product.name.toLocaleLowerCase().includes(normalizedQuery)
+        || product.category.toLocaleLowerCase().includes(normalizedQuery);
+      return matchesCategory && matchesSearch;
+    });
+
+    if (sortBy === 'price-ascending') {
+      return results.sort((a, b) => Number.parseFloat(a.price.slice(1)) - Number.parseFloat(b.price.slice(1)));
+    }
+    if (sortBy === 'price-descending') {
+      return results.sort((a, b) => Number.parseFloat(b.price.slice(1)) - Number.parseFloat(a.price.slice(1)));
+    }
+    return results;
+  }, [activeFilter, searchQuery, sortBy]);
+
+  const updateSearch = (value) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      if (value) next.set('search', value);
+      else next.delete('search');
+      return next;
+    }, { replace: true });
+  };
+
+  const updateSort = (value) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      if (value === 'newest') next.delete('sort');
+      else next.set('sort', value);
+      return next;
+    }, { replace: true });
+  };
+
+  const selectCategory = (slug) => {
+    const query = searchParams.toString();
+    navigate(`/katalog${slug ? `/${slug}` : ''}${query ? `?${query}` : ''}`);
+  };
 
   return (
     <>
@@ -38,39 +102,58 @@ export default function CatalogPage() {
             AURA KOLLEKSIYASI
           </span>
           <h1 className="font-['Playfair_Display'] text-[36px] md:text-[48px] font-bold text-[#1A1A1A] leading-tight">
-            Barcha mahsulotlar
+            {activeFilter === 'Barchasi' ? 'Barcha mahsulotlar' : activeFilter}
           </h1>
         </div>
 
         {/* Filters + Sort */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10">
           <div className="flex items-center gap-2 flex-wrap">
-            {FILTERS.map((filter) => (
+            {FILTERS.map(({ label, slug }) => (
               <button
-                key={filter}
-                onClick={() => setActiveFilter(filter)}
+                key={label}
+                type="button"
+                onClick={() => selectCategory(slug)}
+                aria-pressed={activeFilter === label}
                 className={`h-9 px-4 rounded-full font-['Inter'] text-[13px] font-semibold border transition-all ${
-                  activeFilter === filter
+                  activeFilter === label
                     ? 'bg-[#8A9A5B] border-[#8A9A5B] text-white'
                     : 'bg-white border-[#E5E5E5] text-[#6B6B6B] hover:border-[#8A9A5B] hover:text-[#1A1A1A]'
                 }`}
               >
-                {filter}
+                {label}
               </button>
             ))}
           </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <label className="sr-only" htmlFor="catalog-search">Mahsulot qidirish</label>
+            <input
+              ref={searchInput}
+              id="catalog-search"
+              type="search"
+              value={searchQuery}
+              onChange={(event) => updateSearch(event.target.value)}
+              placeholder="Mahsulot qidirish"
+              className="h-10 min-w-0 sm:w-56 px-3 rounded-lg border border-[#E5E5E5] font-['Inter'] text-[13px] text-[#1A1A1A] bg-white focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]"
+            />
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="h-9 px-3 rounded-lg border border-[#E5E5E5] font-['Inter'] text-[13px] text-[#1A1A1A] bg-white focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]"
+            onChange={(event) => updateSort(event.target.value)}
+            aria-label="Mahsulotlarni saralash"
+            className="h-10 px-3 rounded-lg border border-[#E5E5E5] font-['Inter'] text-[13px] text-[#1A1A1A] bg-white focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]"
           >
-            {SORT_OPTIONS.map((opt) => (
-              <option key={opt}>{opt}</option>
+            {SORT_OPTIONS.map(({ label, value }) => (
+              <option key={value} value={value}>{label}</option>
             ))}
           </select>
+          </div>
         </div>
 
         {/* Products Grid */}
+        <p className="font-['Inter'] text-[14px] text-[#6B6B6B] mb-4" aria-live="polite">
+          {filtered.length} ta mahsulot
+        </p>
+        {filtered.length ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {filtered.map(({ name, price, image, slug }) => (
             <div
@@ -93,10 +176,9 @@ export default function CatalogPage() {
                 />
                 <Link
                   to={`/mahsulot/${slug}`}
-                  className="absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 transition-all duration-300 h-12 bg-[#8A9A5B] hover:bg-[#6E7A47] text-white font-['Inter'] text-[14px] font-semibold rounded-lg flex items-center justify-center gap-2"
+                  className="absolute inset-x-3 bottom-3 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 h-12 bg-[#8A9A5B] hover:bg-[#6E7A47] text-white font-['Inter'] text-[14px] font-semibold rounded-lg flex items-center justify-center gap-2"
                 >
-                  <span className="material-symbols-outlined text-[18px]">shopping_bag</span>
-                  Savatga qo'shish
+                  Batafsil ko'rish
                 </Link>
               </div>
               <div className="px-1 pb-1">
@@ -110,6 +192,25 @@ export default function CatalogPage() {
             </div>
           ))}
         </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-[#C6C8B8] bg-white px-6 py-16 text-center">
+            <h2 className="font-['Playfair_Display'] text-2xl font-semibold text-[#1A1A1A]">
+              Mahsulot topilmadi
+            </h2>
+            <p className="mt-2 font-['Inter'] text-sm text-[#6B6B6B]">
+              Qidiruv so'zini yoki tanlangan kategoriyani o'zgartirib ko'ring.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                navigate('/katalog');
+              }}
+              className="mt-5 rounded-lg bg-[#8A9A5B] px-5 py-3 font-['Inter'] text-sm font-semibold text-white transition-colors hover:bg-[#6E7A47]"
+            >
+              Barcha mahsulotlarni ko'rish
+            </button>
+          </div>
+        )}
       </div>
     </>
   );

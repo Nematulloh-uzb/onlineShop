@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   const navLinks = [
     { to: '/', label: "Bosh sahifa", end: true },
@@ -63,12 +67,13 @@ export default function Header() {
 
         {/* Actions */}
         <div className="flex items-center gap-2 md:gap-3">
-          <button
+          <Link
+            to="/katalog?search="
             aria-label="Qidiruv"
             className="w-10 h-10 flex items-center justify-center rounded-full text-[#6B6B6B] hover:text-[#1A1A1A] hover:bg-[#F0EDED] transition-all"
           >
             <span className="material-symbols-outlined text-[22px]">search</span>
-          </button>
+          </Link>
 
           <Link
             to="/savat"
@@ -88,6 +93,8 @@ export default function Header() {
           {/* Mobile menu toggle */}
           <button
             aria-label="Menyu"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-navigation"
             className="w-10 h-10 flex lg:hidden items-center justify-center rounded-full text-[#6B6B6B] hover:bg-[#F0EDED] transition-all"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
@@ -100,7 +107,7 @@ export default function Header() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="lg:hidden border-t border-[#F0EDED] bg-white/95 backdrop-blur-md px-6 py-4 flex flex-col gap-2 shadow-md">
+        <nav id="mobile-navigation" aria-label="Mobil navigatsiya" className="lg:hidden border-t border-[#F0EDED] bg-white/95 backdrop-blur-md px-6 py-4 flex flex-col gap-2 shadow-md">
           {navLinks.map(({ to, label, end }) => (
             <NavLink
               key={to}
@@ -125,7 +132,7 @@ export default function Header() {
           >
             Kirish
           </NavLink>
-        </div>
+        </nav>
       )}
     </header>
   );

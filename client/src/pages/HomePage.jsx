@@ -7,14 +7,17 @@ const HERO_IMAGE =
 const CATEGORIES = [
   {
     title: 'Ayollar',
+    slug: 'ayollar',
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAfT6HYO6v0s2eke3LcgLa9uxNs3xZ-kiw6lVxIjswMetWEf8-jhn2QY_j3SfiNjanbGfucYbrOPz7TycBw8KgZhcFWZn4YAMLoxkkviKSjxh0tcx5ksfVAgCiTMTP1pzuTbUfi3luDZYcH2kATBsvUNPT671vPyzVSGVmes2-oB87rMjjQyE7VqIEba-kunLWJ6WJsbfR2h3ci9H1cXslBVrJhqn6i8aPYcEh482Iye-vV1qyIQhA78w',
   },
   {
     title: 'Erkaklar',
+    slug: 'erkaklar',
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCa2pPcn_Euzszz2bTJFL9Ep7lGf4hpalct-0zLca2MYuVhst1-nxK61cojGDAOMhTj6tyRA6WjkfPec_NJURUfDIlWNoqlncK9g5zsDN75J73OrRJEi-Fu66UerMKneFYWONh0QvNpBzijZHxes7UmrpnZVue2fA_r8ecmaw_Zt23k3nVRjW8d7NaHidF5ou842qRdWix0HNWmaDRz6iJsDgltyhuiKZ6m6N2htY7_myF8-45sNWQMrw',
   },
   {
     title: 'Aksessuarlar',
+    slug: 'aksessuarlar',
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC4OdYJs9dJAmFCQCBBxUdzkGTxbKSpKBfIPgfkc2GjPxJF7wol1pZ5_5KM33fodISEQg7ncQb_KA6hGhTgvbxDHSeZNkxIM8pJFmukV4jF_fngnGgnLyrR7FS4G6Nsw6dWcNlnspdY8aAl_FNtngS5GaeDnRFgfBbx8xBM_RRkxiuQ9K3l7oZ2QT1zIxXnk1bLURR4kZQeruYMowkvoPCVRJvJrBegwbajs5Dh8tWQX3GYqrS4VLfrtw',
   },
 ];
@@ -93,10 +96,10 @@ export default function HomePage() {
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {CATEGORIES.map(({ title, image }) => (
+            {CATEGORIES.map(({ title, slug, image }) => (
               <Link
                 key={title}
-                to="/katalog"
+                to={`/katalog/${slug}`}
                 className="group relative aspect-[4/5] rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 block"
               >
                 <div
@@ -161,10 +164,9 @@ export default function HomePage() {
                   />
                   <Link
                     to={`/mahsulot/${slug}`}
-                    className="absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 transition-all duration-300 h-12 bg-[#8A9A5B] hover:bg-[#6E7A47] text-white font-['Inter'] text-[14px] font-semibold rounded-lg shadow-lg flex items-center justify-center gap-2"
+                    className="absolute inset-x-3 bottom-3 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 h-12 bg-[#8A9A5B] hover:bg-[#6E7A47] text-white font-['Inter'] text-[14px] font-semibold rounded-lg shadow-lg flex items-center justify-center gap-2"
                   >
-                    <span className="material-symbols-outlined text-[18px]">shopping_bag</span>
-                    Savatga qo'shish
+                    Batafsil ko'rish
                   </Link>
                 </div>
                 <div className="px-1 pb-1 flex flex-col gap-1">

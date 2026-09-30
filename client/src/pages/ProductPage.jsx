@@ -130,7 +130,7 @@ export default function ProductPage() {
                   Ekologik ta'sir
                 </p>
                 <p className="font-['Inter'] text-[13px] text-[#6B6B6B]">
-                  Bu mahsulot {PRODUCT.ecoImpact.waterSaved.toLocaleString()} litr suv tejaydi va {PRODUCT.ecoImpact.co2Reduced} kg CO₂ ni kamaytiради.
+                  Bu mahsulot {PRODUCT.ecoImpact.waterSaved.toLocaleString()} litr suv tejaydi va {PRODUCT.ecoImpact.co2Reduced} kg CO₂ ni kamaytiradi.
                 </p>
               </div>
             </div>
