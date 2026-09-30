@@ -24,12 +24,25 @@ app.use(
 );
 
 // CORS sozlamalari
+const allowedOrigins = new Set([
+  env.CLIENT_URL,
+  ...(env.NODE_ENV === 'production'
+    ? []
+    : ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173']),
+]);
+
 app.use(
   cors({
-    origin: [env.CLIENT_URL, 'http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'],
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.has(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error('CORS origin ruxsat etilmagan'));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   })
 );
 
@@ -45,6 +58,18 @@ app.use('/api', apiLimiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+
+app.use((req, res, next) => {
+  const isSafeMethod = ['GET', 'HEAD', 'OPTIONS'].includes(req.method);
+  if (
+    !isSafeMethod
+    && (req.get('Sec-Fetch-Site') === 'cross-site'
+      || (req.get('Origin') && req.get('X-Requested-With') !== 'XMLHttpRequest'))
+  ) {
+    return next(new ApiError(403, 'So‘rov manbasi tekshiruvdan o‘tmadi'));
+  }
+  next();
+});
 
 // NoSQL inyeksiya va parametr ifloslanishidan himoya
 app.use(mongoSanitize());

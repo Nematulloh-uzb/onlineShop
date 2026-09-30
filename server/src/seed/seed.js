@@ -33,7 +33,15 @@ const seedDatabase = async () => {
         return {
           updateOne: {
             filter: { slug: product.slug },
-            update: { $setOnInsert: { ...product, category } },
+            update: {
+              $setOnInsert: {
+                ...product,
+                category,
+                ratingAverage: 5,
+                ratingCount: 0,
+                soldCount: 0,
+              },
+            },
             upsert: true,
           },
         };

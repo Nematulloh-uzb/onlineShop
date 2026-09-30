@@ -177,27 +177,27 @@ export default function HomePage() {
                 const image = product.images?.[0];
                 return (
                   <article key={product._id} className="group overflow-hidden rounded-xl bg-white p-3 shadow-card">
-                        <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-[#F0EDED]">
-                          <Link
-                            to={`/mahsulot/${product.slug}`}
-                            aria-label={`${product.name} mahsulotini ko‘rish`}
-                            className="block h-full"
-                          >
-                            {image?.url && (
-                              <img
-                                src={image.url}
-                                alt={image.alt || product.name}
-                                loading="lazy"
-                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                              />
-                            )}
-                          </Link>
-                          <WishlistToggle
-                            productId={product._id}
-                            className="absolute right-3 top-3 z-10 h-10 w-10 rounded-full bg-white/95 text-[#56642B] shadow-sm hover:text-red-600"
+                    <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-[#F0EDED]">
+                      <Link
+                        to={`/mahsulot/${product.slug}`}
+                        aria-label={`${product.name} mahsulotini ko‘rish`}
+                        className="block h-full"
+                      >
+                        {image?.url && (
+                          <img
+                            src={image.url}
+                            alt={image.alt || product.name}
+                            loading="lazy"
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                           />
-                        </div>
-                        <div className="px-1 pb-2 pt-4">
+                        )}
+                      </Link>
+                      <WishlistToggle
+                        productId={product._id}
+                        className="absolute right-3 top-3 z-10 h-10 w-10 rounded-full bg-white/95 text-[#56642B] shadow-sm hover:text-red-600"
+                      />
+                    </div>
+                    <div className="px-1 pb-2 pt-4">
                       <p className="mb-1 font-['Inter'] text-[11px] font-semibold uppercase tracking-wider text-[#71814B]">
                         {product.ecoBadge}
                       </p>
@@ -213,7 +213,7 @@ export default function HomePage() {
                             {formatPrice(product.compareAtPrice, product.currency)}
                           </span>
                         )}
-                      </div>
+                        </div>
                     </div>
                   </article>
                 );

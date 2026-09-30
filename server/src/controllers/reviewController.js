@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Review } from '../models/Review.js';
 import { Product } from '../models/Product.js';
 import { Order } from '../models/Order.js';
@@ -7,6 +8,9 @@ import { catchAsync } from '../utils/catchAsync.js';
 // Mahsulot sharhlarini olish
 export const getProductReviews = catchAsync(async (req, res, next) => {
   const { id } = req.params;
+  if (!mongoose.isValidObjectId(id)) {
+    return next(new ApiError(400, 'Mahsulot identifikatori noto‘g‘ri'));
+  }
 
   const reviews = await Review.find({ product: id })
     .populate('user', 'name surname')
@@ -23,10 +27,23 @@ export const getProductReviews = catchAsync(async (req, res, next) => {
 // Yangi sharh qoldirish
 export const createReview = catchAsync(async (req, res, next) => {
   const { id } = req.params; // Product ID
-  const { rating, title, comment } = req.body;
+  const { rating, title, comment } = req.body || {};
 
-  if (!rating || !title || !comment) {
-    return next(new ApiError(400, 'Baho, sarlavha va sharh matnini to‘liq kiriting'));
+  if (!mongoose.isValidObjectId(id)) {
+    return next(new ApiError(400, 'Mahsulot identifikatori noto‘g‘ri'));
+  }
+  if (
+    !Number.isInteger(rating) ||
+    rating < 1 ||
+    rating > 5 ||
+    typeof title !== 'string' ||
+    !title.trim() ||
+    title.trim().length > 100 ||
+    typeof comment !== 'string' ||
+    comment.trim().length < 10 ||
+    comment.trim().length > 2000
+  ) {
+    return next(new ApiError(400, 'Baho, sarlavha va sharh matnini to‘g‘ri kiriting'));
   }
 
   const product = await Product.findOne({ _id: id, isActive: true });
@@ -51,8 +68,8 @@ export const createReview = catchAsync(async (req, res, next) => {
     product: id,
     user: req.user._id,
     rating: Number(rating),
-    title,
-    comment,
+    title: title.trim(),
+    comment: comment.trim(),
     isVerifiedPurchase: !!hasPurchased,
   });
 

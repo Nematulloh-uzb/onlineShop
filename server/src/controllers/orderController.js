@@ -19,19 +19,35 @@ export const createOrder = catchAsync(async (req, res, next) => {
     paymentMethod,
   } = req.body;
 
-  if (!items || !Array.isArray(items) || items.length === 0) {
+  if (!items || !Array.isArray(items) || items.length === 0 || items.length > 50) {
     return next(new ApiError(400, 'Buyurtma uchun mahsulotlar tanlanmagan'));
   }
 
-  if (!shippingAddress || !shippingAddress.firstName || !shippingAddress.street || !shippingAddress.city) {
+  if (
+    !shippingAddress
+    || !shippingAddress.firstName
+    || !shippingAddress.lastName
+    || !shippingAddress.street
+    || !shippingAddress.city
+    || !shippingAddress.region
+    || !shippingAddress.phone
+  ) {
     return next(new ApiError(400, 'Yetkazib berish manzilini to‘liq kiriting'));
   }
 
-  if (!contact || !contact.email || !contact.phone) {
+  if (
+    !contact
+    || typeof contact.email !== 'string'
+    || !/^\S+@\S+\.\S+$/.test(contact.email)
+    || typeof contact.phone !== 'string'
+    || !contact.phone.trim()
+    || contact.email.length > 254
+    || contact.phone.length > 30
+  ) {
     return next(new ApiError(400, 'Aloqa ma‘lumotlarini (email va telefon) kiriting'));
   }
 
-  if (!paymentMethod) {
+  if (!['uzcard', 'humo', 'visa', 'mastercard', 'payme', 'click', 'cash'].includes(paymentMethod)) {
     return next(new ApiError(400, 'To‘lov usulini tanlang'));
   }
 
@@ -42,7 +58,14 @@ export const createOrder = catchAsync(async (req, res, next) => {
 
   for (const item of items) {
     const quantity = Number(item.quantity);
-    if (!item.productId || typeof item.variantSku !== 'string' || !Number.isInteger(quantity) || quantity < 1 || quantity > 10) {
+    if (
+      !mongoose.isValidObjectId(item.productId)
+      || typeof item.variantSku !== 'string'
+      || !item.variantSku.trim()
+      || !Number.isInteger(quantity)
+      || quantity < 1
+      || quantity > 10
+    ) {
       return next(new ApiError(400, 'Buyurtmadagi mahsulot va miqdor ma‘lumotlari noto‘g‘ri'));
     }
 
@@ -92,6 +115,9 @@ export const createOrder = catchAsync(async (req, res, next) => {
   let appliedPromo = null;
 
   if (inputPromoCode) {
+    if (typeof inputPromoCode !== 'string' || inputPromoCode.length > 50) {
+      return next(new ApiError(400, 'Promo-kod noto‘g‘ri'));
+    }
     const promo = await PromoCode.findOne({
       code: inputPromoCode.toUpperCase().trim(),
       isActive: true,

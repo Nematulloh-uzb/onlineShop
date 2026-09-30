@@ -12,6 +12,9 @@ const formatPrice = (price, currency = 'UZS') => new Intl.NumberFormat('uz-UZ', 
   currency,
   maximumFractionDigits: 0,
 }).format(price);
+const formatReviewDate = (date) => new Intl.DateTimeFormat('uz-UZ', {
+  dateStyle: 'medium',
+}).format(new Date(date));
 
 export default function ProductPage() {
   const { slug } = useParams();
@@ -24,6 +27,10 @@ export default function ProductPage() {
   const [activeImage, setActiveImage] = useState(0);
   const [message, setMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewTitle, setReviewTitle] = useState('');
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewMessage, setReviewMessage] = useState('');
 
   const productQuery = useQuery({
     queryKey: ['product', slug],
@@ -33,6 +40,14 @@ export default function ProductPage() {
     },
   });
   const product = productQuery.data;
+  const reviewsQuery = useQuery({
+    queryKey: ['reviews', product?._id],
+    queryFn: async () => {
+      const { data } = await api.get(`/products/${product._id}/reviews`);
+      return data.data.reviews;
+    },
+    enabled: Boolean(product),
+  });
 
   useEffect(() => {
     if (!product) return;
@@ -46,6 +61,14 @@ export default function ProductPage() {
   }, [product]);
 
   const selectedVariant = product?.variants.find(({ sku }) => sku === selectedVariantSku);
+  const reviews = reviewsQuery.data || [];
+  const averageRating = reviews.length
+    ? reviews.reduce((total, review) => total + review.rating, 0) / reviews.length
+    : null;
+  const hasReviewed = Boolean(user && (
+    reviewMessage === 'Sharhingiz qabul qilindi.' ||
+    reviews.some((review) => review.user?._id === user.id)
+  ));
   const colors = useMemo(() => {
     const uniqueColors = new Map();
     product?.variants.forEach(({ color }) => uniqueColors.set(color.name, color));
@@ -76,6 +99,24 @@ export default function ProductPage() {
       setErrorMessage(getApiErrorMessage(error, error.message || 'Savatga qo‘shib bo‘lmadi.'));
       setMessage('');
     },
+  });
+  const submitReview = useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post(`/products/${product._id}/reviews`, {
+        rating: reviewRating,
+        title: reviewTitle.trim(),
+        comment: reviewComment.trim(),
+      });
+      return data.data.review;
+    },
+    onSuccess: () => {
+      setReviewTitle('');
+      setReviewComment('');
+      setReviewRating(5);
+      setReviewMessage('Sharhingiz qabul qilindi.');
+      queryClient.invalidateQueries({ queryKey: ['reviews', product._id] });
+    },
+    onError: (error) => setReviewMessage(getApiErrorMessage(error, 'Sharhni yuborib bo‘lmadi.')),
   });
 
   const handleAddToCart = () => {
@@ -164,15 +205,13 @@ export default function ProductPage() {
             <h1 className="font-['Playfair_Display'] text-3xl font-semibold leading-tight text-[#1A1A1A] md:text-4xl">
               {product.name}
             </h1>
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-1 text-[#71814B]" aria-label={`Reyting ${product.ratingAverage} / 5`}>
-                <Star size={17} fill="currentColor" aria-hidden="true" />
-                <span className="font-['Inter'] text-sm font-semibold">{Number(product.ratingAverage || 0).toFixed(1)}</span>
+            {averageRating !== null && (
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <Star size={17} fill="currentColor" className="text-[#71814B]" aria-hidden="true" />
+                <span className="font-['Inter'] text-sm font-semibold text-[#1A1A1A]">{averageRating.toFixed(1)}</span>
+                <span className="font-['Inter'] text-sm text-[#6B6B6B]">{reviews.length} ta xaridor sharhi</span>
               </div>
-              <span className="font-['Inter'] text-sm text-[#6B6B6B]">
-                {product.ratingCount || 0} ta sharh
-              </span>
-            </div>
+            )}
 
             <div className="mt-5 flex flex-wrap items-center gap-3">
               <span className="font-['Inter'] text-2xl font-bold text-[#1A1A1A]">
@@ -331,6 +370,116 @@ export default function ProductPage() {
                 ))}
               </dl>
             </div>
+
+            <section className="mt-8 border-t border-[#E5E5E5] pt-6" aria-labelledby="product-reviews-title">
+              <h2 id="product-reviews-title" className="font-['Playfair_Display'] text-xl font-semibold text-[#1A1A1A]">
+                Xaridorlar sharhlari
+              </h2>
+              {reviewsQuery.isLoading ? (
+                <p className="mt-4 font-['Inter'] text-sm text-[#6B6B6B]">Sharhlar yuklanmoqda…</p>
+              ) : reviewsQuery.isError ? (
+                <p role="alert" className="mt-4 font-['Inter'] text-sm text-red-700">
+                  {getApiErrorMessage(reviewsQuery.error, 'Sharhlarni yuklab bo‘lmadi.')}
+                </p>
+              ) : reviews.length ? (
+                <ul className="mt-4 space-y-4">
+                  {reviews.map((review) => (
+                    <li key={review._id} className="rounded-lg bg-[#F8F8F5] p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="font-['Inter'] text-sm font-semibold text-[#1A1A1A]">
+                            {[review.user?.name, review.user?.surname].filter(Boolean).join(' ') || 'Xaridor'}
+                          </p>
+                          {review.isVerifiedPurchase && (
+                            <p className="mt-1 font-['Inter'] text-xs text-[#56642B]">Tasdiqlangan xarid</p>
+                          )}
+                        </div>
+                        <span className="font-['Inter'] text-xs text-[#6B6B6B]">{formatReviewDate(review.createdAt)}</span>
+                      </div>
+                      <p className="mt-3 flex items-center gap-1 font-['Inter'] text-xs font-semibold text-[#71814B]">
+                        <Star size={14} fill="currentColor" aria-hidden="true" /> {review.rating} / 5
+                      </p>
+                      <h3 className="mt-2 font-['Inter'] text-sm font-semibold text-[#1A1A1A]">{review.title}</h3>
+                      <p className="mt-1 font-['Inter'] text-sm leading-relaxed text-[#6B6B6B]">{review.comment}</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-3 font-['Inter'] text-sm text-[#6B6B6B]">
+                  Bu mahsulotga hali sharh qoldirilmagan.
+                </p>
+              )}
+              {hasReviewed ? (
+                <p className="mt-5 rounded-lg bg-[#F0F2E8] px-4 py-3 font-['Inter'] text-sm text-[#56642B]">
+                  Ushbu mahsulotga sharh qoldirgansiz.
+                </p>
+              ) : user ? (
+                <form
+                  className="mt-6 space-y-4 rounded-xl border border-[#E5E5E5] p-4"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    setReviewMessage('');
+                    submitReview.mutate();
+                  }}
+                >
+                  <h3 className="font-['Inter'] text-sm font-semibold text-[#1A1A1A]">Sharh qoldiring</h3>
+                  <div>
+                    <label htmlFor="review-rating" className="mb-1 block font-['Inter'] text-xs font-semibold text-[#1A1A1A]">Baho</label>
+                    <select
+                      id="review-rating"
+                      value={reviewRating}
+                      onChange={(event) => setReviewRating(Number(event.target.value))}
+                      className="h-10 rounded-lg border border-[#E5E5E5] bg-white px-3 font-['Inter'] text-sm"
+                    >
+                      {[5, 4, 3, 2, 1].map((rating) => <option key={rating} value={rating}>{rating} / 5</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="review-title" className="mb-1 block font-['Inter'] text-xs font-semibold text-[#1A1A1A]">Sarlavha</label>
+                    <input
+                      id="review-title"
+                      required
+                      maxLength={100}
+                      value={reviewTitle}
+                      onChange={(event) => setReviewTitle(event.target.value)}
+                      className="h-11 w-full rounded-lg border border-[#E5E5E5] px-3 font-['Inter'] text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="review-comment" className="mb-1 block font-['Inter'] text-xs font-semibold text-[#1A1A1A]">Sharh</label>
+                    <textarea
+                      id="review-comment"
+                      required
+                      minLength={10}
+                      maxLength={2000}
+                      rows={4}
+                      value={reviewComment}
+                      onChange={(event) => setReviewComment(event.target.value)}
+                      className="w-full resize-y rounded-lg border border-[#E5E5E5] p-3 font-['Inter'] text-sm"
+                    />
+                  </div>
+                  {reviewMessage && (
+                    <p role={submitReview.isError ? 'alert' : 'status'} className={`font-['Inter'] text-sm ${submitReview.isError ? 'text-red-700' : 'text-[#56642B]'}`}>
+                      {reviewMessage}
+                    </p>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={submitReview.isPending}
+                    className="h-11 rounded-lg bg-[#71814B] px-5 font-['Inter'] text-sm font-semibold text-white hover:bg-[#56642B] disabled:opacity-60"
+                  >
+                    {submitReview.isPending ? 'Yuborilmoqda…' : 'Sharhni yuborish'}
+                  </button>
+                </form>
+              ) : (
+                <p className="mt-5 font-['Inter'] text-sm text-[#6B6B6B]">
+                  <Link to="/kirish" state={{ from: location }} className="font-semibold text-[#56642B] underline">
+                    Kirish
+                  </Link>{' '}
+                  orqali sharh qoldirishingiz mumkin.
+                </p>
+              )}
+            </section>
           </section>
         </div>
       </main>

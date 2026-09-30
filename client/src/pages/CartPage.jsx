@@ -34,6 +34,10 @@ export default function CartPage() {
         const { data } = await api.delete(`/cart/items/${itemId}`);
         return data.data.cart;
       }
+      if (action === 'remove-promo') {
+        const { data } = await api.delete('/cart/promo');
+        return data.data.cart;
+      }
       const { data } = await api.post('/cart/promo', { code });
       return data.data.cart;
     },
@@ -220,9 +224,19 @@ export default function CartPage() {
                 </button>
               </form>
               {cart.promoCode && (
-                <p className="mt-3 font-['Inter'] text-xs text-[#56642B]">
-                  {cart.promoCode.code} promo-kodi tanlandi. Chegirma serverda buyurtma tasdiqlanganda tekshiriladi.
-                </p>
+                <div className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-[#F0F2E8] px-3 py-2">
+                  <p className="font-['Inter'] text-xs text-[#56642B]">
+                    {cart.promoCode.code} promo-kodi tanlandi.
+                  </p>
+                  <button
+                    type="button"
+                    disabled={cartMutation.isPending}
+                    onClick={() => cartMutation.mutate({ action: 'remove-promo' })}
+                    className="font-['Inter'] text-xs font-semibold text-[#56642B] underline disabled:opacity-50"
+                  >
+                    Olib tashlash
+                  </button>
+                </div>
               )}
 
               <dl className="mt-6 space-y-3 border-t border-[#E5E5E5] pt-5 font-['Inter'] text-sm">

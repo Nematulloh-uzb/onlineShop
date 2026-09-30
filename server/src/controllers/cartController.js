@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Cart } from '../models/Cart.js';
 import { Product } from '../models/Product.js';
 import { PromoCode } from '../models/PromoCode.js';
@@ -28,7 +29,7 @@ export const addItem = catchAsync(async (req, res, next) => {
   const { productId, variantSku, quantity = 1 } = req.body;
   const requestedQuantity = Number(quantity);
 
-  if (!productId || !variantSku) {
+  if (!mongoose.isValidObjectId(productId) || typeof variantSku !== 'string' || !variantSku.trim()) {
     return next(new ApiError(400, 'Mahsulot va variant ma‘lumotlarini kiriting'));
   }
   if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1 || requestedQuantity > 10) {

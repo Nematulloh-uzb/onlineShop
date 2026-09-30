@@ -1,7 +1,7 @@
 import { ApiError } from '../utils/ApiError.js';
 
-class MockProvider {
-  async processPayment({ orderNumber, amount, paymentMethod, cardDetails }) {
+class CashOnDeliveryProvider {
+  async processPayment({ orderNumber, paymentMethod }) {
     if (paymentMethod === 'cash') {
       return {
         success: true,
@@ -14,18 +14,13 @@ class MockProvider {
     throw new ApiError(503, 'Onlayn to‘lov provayderi sozlanmagan. Hozircha yetkazib berganda to‘lash usulidan foydalaning.');
   }
 
-  async refund(providerRef) {
-    console.log(`[MockProvider] To‘lov qaytarildi: Ref: ${providerRef}`);
-    return {
-      success: true,
-      status: 'refunded',
-      refundedAt: new Date(),
-    };
+  async refund() {
+    throw new ApiError(503, 'To‘lovni qaytarish provayderi sozlanmagan.');
   }
 }
 
 export const paymentService = {
-  provider: new MockProvider(),
+  provider: new CashOnDeliveryProvider(),
 
   async processPayment(params) {
     return this.provider.processPayment(params);

@@ -186,8 +186,8 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   const { token } = req.params || {};
   const { password } = req.body || {};
 
-  if (typeof password !== 'string' || password.length < 8) {
-    return next(new ApiError(400, 'Yangi parol kamida 8 ta belgidan iborat bo‘lishi shart'));
+  if (typeof password !== 'string' || password.length < 8 || !/\d/.test(password) || !/[a-zA-Z]/.test(password)) {
+    return next(new ApiError(400, 'Parol kamida 8 ta belgidan iborat bo‘lishi, kamida bitta harf va bitta raqamni o‘z ichiga olishi kerak'));
   }
 
   if (typeof token !== 'string' || !token) {

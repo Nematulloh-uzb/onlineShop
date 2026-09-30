@@ -5,6 +5,10 @@ const developmentAccessSecret = 'aura_eco_luxury_super_secret_access_jwt_key_202
 const developmentRefreshSecret = 'aura_eco_luxury_super_secret_refresh_jwt_key_2026';
 const nodeEnv = process.env.NODE_ENV || 'development';
 
+if (nodeEnv === 'production' && (!process.env.MONGODB_URI || !process.env.CLIENT_URL)) {
+  throw new Error('MONGODB_URI and CLIENT_URL must be configured in production');
+}
+
 const getJwtSecret = (name, developmentDefault) => {
   const secret = process.env[name];
 
@@ -32,7 +36,6 @@ export const env = {
   VAT_RATE: parseFloat(process.env.VAT_RATE || '0.08'),
   FREE_SHIPPING_THRESHOLD: parseInt(process.env.FREE_SHIPPING_THRESHOLD || '1000000', 10),
   SHIPPING_FEE: parseInt(process.env.SHIPPING_FEE || '35000', 10),
-  ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@aura.uz',
-  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'Admin123!',
-  PAYMENT_PROVIDER: process.env.PAYMENT_PROVIDER || 'mock',
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL || '',
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || '',
 };
