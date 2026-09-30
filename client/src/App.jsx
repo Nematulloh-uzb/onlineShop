@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import Layout from './components/Layout/Layout.jsx';
 import LoadingSpinner from './components/UI/LoadingSpinner.jsx';
+import RequireAuth from './components/UI/RequireAuth.jsx';
 
 // Lazy-load sahifalar
 const HomePage = lazy(() => import('./pages/HomePage.jsx'));
@@ -25,13 +26,15 @@ function App() {
           <Route path="katalog" element={<CatalogPage />} />
           <Route path="katalog/:categorySlug" element={<CatalogPage />} />
           <Route path="mahsulot/:slug" element={<ProductPage />} />
-          <Route path="savat" element={<CartPage />} />
-          <Route path="tolov" element={<CheckoutPage />} />
+          <Route element={<RequireAuth />}>
+            <Route path="savat" element={<CartPage />} />
+            <Route path="tolov" element={<CheckoutPage />} />
+            <Route path="profil" element={<ProfilePage />} />
+            <Route path="istaklar" element={<WishlistPage />} />
+          </Route>
           <Route path="buyurtma/:orderNumber" element={<OrderSuccessPage />} />
           <Route path="kirish" element={<LoginPage />} />
           <Route path="royxat" element={<RegisterPage />} />
-          <Route path="profil" element={<ProfilePage />} />
-          <Route path="istaklar" element={<WishlistPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

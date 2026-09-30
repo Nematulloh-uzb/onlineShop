@@ -3,14 +3,29 @@ import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 import { ApiError } from '../utils/ApiError.js';
 import { catchAsync } from '../utils/catchAsync.js';
-import { generateAccessToken, sendTokenResponse } from '../utils/token.js';
+import {
+  accessCookieOptions,
+  clearAuthCookies,
+  generateAccessToken,
+  generateRefreshToken,
+  hashRefreshToken,
+  matchesRefreshToken,
+  sendTokenResponse,
+} from '../utils/token.js';
 import { env } from '../config/env.js';
 
 // 1. Ro'yxatdan o'tish
 export const register = catchAsync(async (req, res, next) => {
-  const { name, surname, email, phone, password, newsletterOptIn } = req.body;
+  const { name, surname, email, phone, password, newsletterOptIn } = req.body || {};
 
-  if (!email || !password || !name) {
+  if (
+    typeof email !== 'string' ||
+    typeof password !== 'string' ||
+    typeof name !== 'string' ||
+    !email.trim() ||
+    !password ||
+    !name.trim()
+  ) {
     return next(new ApiError(400, 'Ism, email va parol kiritilishi shart'));
   }
 
@@ -18,7 +33,8 @@ export const register = catchAsync(async (req, res, next) => {
     return next(new ApiError(400, 'Parol kamida 8 ta belgidan iborat bo‘lishi, kamida bitta harf va bitta raqamni o‘z ichiga olishi kerak'));
   }
 
-  const existingUser = await User.findOne({ email: email.toLowerCase() });
+  const normalizedEmail = email.trim().toLowerCase();
+  const existingUser = await User.findOne({ email: normalizedEmail });
   if (existingUser) {
     return next(new ApiError(409, 'Ushbu elektron pochta manzili allaqachon ro‘yxatdan o‘tgan'));
   }
@@ -28,25 +44,25 @@ export const register = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name,
     surname: surname || '',
-    email: email.toLowerCase(),
+    email: normalizedEmail,
     phone: phone || '',
     passwordHash,
     newsletterOptIn: !!newsletterOptIn,
     role: 'customer',
   });
 
-  sendTokenResponse(newUser, 201, res);
+  await sendTokenResponse(newUser, 201, res);
 });
 
 // 2. Tizimga kirish
 export const login = catchAsync(async (req, res, next) => {
-  const { email, password } = req.body;
+  const { email, password } = req.body || {};
 
-  if (!email || !password) {
+  if (typeof email !== 'string' || !email.trim() || typeof password !== 'string' || !password) {
     return next(new ApiError(400, 'Elektron pochta va parolni kiriting'));
   }
 
-  const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
+  const user = await User.findOne({ email: email.trim().toLowerCase() }).select('+passwordHash');
   if (!user || !user.isActive) {
     return next(new ApiError(401, 'Elektron pochta yoki parol noto‘g‘ri'));
   }
@@ -56,19 +72,28 @@ export const login = catchAsync(async (req, res, next) => {
     return next(new ApiError(401, 'Elektron pochta yoki parol noto‘g‘ri'));
   }
 
-  sendTokenResponse(user, 200, res);
+  await sendTokenResponse(user, 200, res);
 });
 
 // 3. Tizimdan chiqish
 export const logout = catchAsync(async (req, res) => {
-  res.cookie('accessToken', '', {
-    httpOnly: true,
-    expires: new Date(0),
-  });
-  res.cookie('refreshToken', '', {
-    httpOnly: true,
-    expires: new Date(0),
-  });
+  const token = req.cookies?.refreshToken || req.body?.refreshToken;
+
+  if (typeof token === 'string' && token) {
+    try {
+      const decoded = jwt.verify(token, env.JWT_REFRESH_SECRET);
+      if (decoded && typeof decoded === 'object' && decoded.id) {
+        await User.updateOne(
+          { _id: decoded.id, refreshTokenHash: hashRefreshToken(token) },
+          { $unset: { refreshTokenHash: 1 } }
+        );
+      }
+    } catch {
+      // Logout remains successful even when the presented token is expired or invalid.
+    }
+  }
+
+  clearAuthCookies(res);
 
   res.status(200).json({
     success: true,
@@ -84,32 +109,45 @@ export const refreshToken = catchAsync(async (req, res, next) => {
     return next(new ApiError(401, 'Refresh token topilmadi, qayta kiring'));
   }
 
+  let decoded;
   try {
-    const decoded = jwt.verify(token, env.JWT_REFRESH_SECRET);
-    const user = await User.findById(decoded.id);
-
-    if (!user || !user.isActive) {
-      return next(new ApiError(401, 'Foydalanuvchi hisobi faol emas'));
-    }
-
-    const newAccessToken = generateAccessToken(user._id);
-
-    res.cookie('accessToken', newAccessToken, {
-      httpOnly: true,
-      secure: env.NODE_ENV === 'production',
-      sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
-      expires: new Date(Date.now() + 15 * 60 * 1000),
-    });
-
-    res.status(200).json({
-      success: true,
-      data: {
-        accessToken: newAccessToken,
-      },
-    });
-  } catch (error) {
+    decoded = jwt.verify(token, env.JWT_REFRESH_SECRET);
+  } catch {
+    clearAuthCookies(res);
     return next(new ApiError(401, 'Refresh token yaroqsiz yoki muddati o‘tgan'));
   }
+
+  if (!decoded || typeof decoded !== 'object' || !decoded.id) {
+    clearAuthCookies(res);
+    return next(new ApiError(401, 'Refresh token yaroqsiz yoki muddati o‘tgan'));
+  }
+
+  const user = await User.findById(decoded.id).select('+refreshTokenHash');
+  if (!user || !user.isActive || !matchesRefreshToken(token, user.refreshTokenHash)) {
+    clearAuthCookies(res);
+    return next(new ApiError(401, 'Refresh token yaroqsiz yoki muddati o‘tgan'));
+  }
+
+  const newAccessToken = generateAccessToken(user._id);
+  const newRefreshToken = generateRefreshToken(user._id);
+  user.refreshTokenHash = hashRefreshToken(newRefreshToken);
+  await user.save({ validateBeforeSave: false });
+
+  res.cookie('refreshToken', newRefreshToken, {
+    httpOnly: true,
+    secure: env.NODE_ENV === 'production',
+    sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
+    path: '/',
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  });
+  res.cookie('accessToken', newAccessToken, accessCookieOptions());
+
+  res.status(200).json({
+    success: true,
+    data: {
+      accessToken: newAccessToken,
+    },
+  });
 });
 
 // 5. Joriy foydalanuvchi ma'lumotlari
@@ -183,5 +221,5 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   user.resetPasswordExpires = undefined;
   await user.save();
 
-  sendTokenResponse(user, 200, res);
+  await sendTokenResponse(user, 200, res);
 });

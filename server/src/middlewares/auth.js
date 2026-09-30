@@ -4,6 +4,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { User } from '../models/User.js';
 
 export const protect = async (req, res, next) => {
+  let decoded;
   try {
     let token = null;
 
@@ -17,18 +18,25 @@ export const protect = async (req, res, next) => {
       return next(new ApiError(401, 'Ushbu amalni bajarish uchun tizimga kirishingiz lozim'));
     }
 
-    const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET);
-    const user = await User.findById(decoded.id);
+    decoded = jwt.verify(token, env.JWT_ACCESS_SECRET);
+  } catch (error) {
+    return next(new ApiError(401, 'Autentifikatsiya xatosi: yaroqsiz token'));
+  }
 
+  if (!decoded || typeof decoded !== 'object' || !decoded.id) {
+    return next(new ApiError(401, 'Autentifikatsiya xatosi: yaroqsiz token'));
+  }
+
+  try {
+    const user = await User.findById(decoded.id);
     if (!user || !user.isActive) {
       return next(new ApiError(401, 'Foydalanuvchi topilmadi yoki hisob faol emas'));
     }
-
     req.user = user;
-    next();
   } catch (error) {
-    next(new ApiError(401, 'Autentifikatsiya xatosi: yaroqsiz token'));
+    return next(error);
   }
+  next();
 };
 
 // Ixtiyoriy autentifikatsiya (masalan, mehmon yoki login qilingan foydalanuvchi uchun)
