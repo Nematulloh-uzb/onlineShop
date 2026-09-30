@@ -183,7 +183,7 @@ export default function CatalogPage() {
                   return (
                     <article
                       key={product._id}
-                      className="group overflow-hidden rounded-xl bg-white p-3 shadow-card transition-shadow hover:shadow-card-hover"
+                      className="group min-w-0 overflow-hidden rounded-xl bg-white p-3 shadow-card transition-shadow hover:shadow-card-hover"
                     >
                       <Link
                         to={`/mahsulot/${product.slug}`}

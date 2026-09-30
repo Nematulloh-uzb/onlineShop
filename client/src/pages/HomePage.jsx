@@ -54,7 +54,7 @@ export default function HomePage() {
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
         <div className="mx-auto w-full min-w-0 max-w-[1280px] px-6 py-28 md:px-10">
           <div className="min-w-0 max-w-2xl text-white">
-            <p className="mb-5 inline-flex items-center gap-2 font-['Inter'] text-xs font-semibold uppercase tracking-[0.2em] text-[#E2E8D1]">
+            <p className="mb-5 inline-flex max-w-full flex-wrap items-center gap-2 font-['Inter'] text-xs font-semibold uppercase tracking-[0.12em] md:tracking-[0.2em] text-[#E2E8D1]">
               <Leaf size={16} aria-hidden="true" />
               Tabiiy materiallar · O‘ylangan dizayn
             </p>
@@ -176,7 +176,7 @@ export default function HomePage() {
               {productsQuery.data.map((product) => {
                 const image = product.images?.[0];
                 return (
-                  <article key={product._id} className="group overflow-hidden rounded-xl bg-white p-3 shadow-card">
+                  <article key={product._id} className="group min-w-0 overflow-hidden rounded-xl bg-white p-3 shadow-card">
                     <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-[#F0EDED]">
                       <Link
                         to={`/mahsulot/${product.slug}`}

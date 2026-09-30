@@ -74,7 +74,7 @@ export default function WishlistPage() {
             {wishlistQuery.data.map((product) => {
               const image = product.images?.[0];
               return (
-                <article key={product._id} className="group overflow-hidden rounded-xl bg-white p-3 shadow-card">
+                <article key={product._id} className="group min-w-0 overflow-hidden rounded-xl bg-white p-3 shadow-card">
                   <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-[#F0EDED]">
                     <Link to={`/mahsulot/${product.slug}`} className="block h-full">
                       <ImageWithFallback
