@@ -169,17 +169,32 @@ export default function ProductPage() {
         </nav>
 
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
-          <section aria-label="Mahsulot rasmlari">
-            <div className="aspect-[4/5] overflow-hidden rounded-xl bg-[#F0EDED]">
+          <section
+            aria-label="Mahsulot rasmlari"
+            className="lg:sticky lg:top-24 lg:self-start"
+          >
+            <div className="group relative aspect-[4/5] overflow-hidden rounded-2xl bg-[#F0EDED] shadow-card lg:aspect-auto lg:h-[min(68vh,620px)]">
               <ImageWithFallback
                 key={image?.url || product._id}
                 src={image?.url}
                 alt={image?.alt || product.name}
-                className="h-full w-full object-cover"
+                loading="eager"
+                fetchPriority="high"
+                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
               />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/30 to-transparent px-5 pb-5 pt-16">
+                <p className="font-['Inter'] text-sm font-medium text-white drop-shadow">
+                  {product.name}
+                </p>
+              </div>
+              {images.length > 1 && (
+                <span className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1 font-['Inter'] text-xs font-semibold text-[#38452A] shadow-sm">
+                  {activeImage + 1} / {images.length}
+                </span>
+              )}
             </div>
             {images.length > 1 && (
-              <div className="mt-3 flex gap-3 overflow-x-auto">
+              <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
                 {images.map((item, index) => (
                   <button
                     key={item._id || item.url}
@@ -187,8 +202,8 @@ export default function ProductPage() {
                     onClick={() => setActiveImage(index)}
                     aria-label={`${index + 1}-rasmni ko‘rish`}
                     aria-pressed={activeImage === index}
-                    className={`h-20 w-16 shrink-0 overflow-hidden rounded-lg border-2 ${
-                      activeImage === index ? 'border-[#71814B]' : 'border-transparent'
+                    className={`h-20 w-16 shrink-0 overflow-hidden rounded-xl border-2 transition ${
+                      activeImage === index ? 'border-[#71814B] shadow-sm' : 'border-transparent opacity-75 hover:opacity-100'
                     }`}
                   >
                     <ImageWithFallback
