@@ -91,6 +91,7 @@ export default function Header() {
 
           <Link
             to={user ? '/savat' : '/kirish'}
+            state={user ? undefined : { from: { pathname: '/savat' } }}
             aria-label="Savat"
             className="relative w-10 h-10 flex items-center justify-center rounded-full text-[#6B6B6B] hover:text-[#1A1A1A] hover:bg-[#F0EDED] transition-all"
           >

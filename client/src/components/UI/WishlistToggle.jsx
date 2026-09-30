@@ -38,7 +38,7 @@ export default function WishlistToggle({ productId, className = '' }) {
   };
 
   return (
-    <span className="inline-flex flex-col items-center">
+    <span className="relative inline-flex flex-col items-center">
       <button
         type="button"
         aria-label={isSaved ? 'Istaklardan olib tashlash' : 'Istaklarga qo‘shish'}
@@ -55,12 +55,12 @@ export default function WishlistToggle({ productId, className = '' }) {
         />
       </button>
       {toggleMutation.isError && (
-        <span role="alert" className="sr-only">
+        <span role="alert" className="absolute right-0 top-full z-30 mt-1 w-44 rounded-md bg-white p-2 font-['Inter'] text-[11px] text-red-700 shadow-card">
           {getApiErrorMessage(toggleMutation.error, 'Istaklar ro‘yxatini yangilab bo‘lmadi.')}
         </span>
       )}
       {wishlistQuery.isError && (
-        <span role="alert" className="sr-only">
+        <span role="alert" className="absolute right-0 top-full z-30 mt-1 w-44 rounded-md bg-white p-2 font-['Inter'] text-[11px] text-red-700 shadow-card">
           {getApiErrorMessage(wishlistQuery.error, 'Istaklar ro‘yxatini yuklab bo‘lmadi.')}
         </span>
       )}

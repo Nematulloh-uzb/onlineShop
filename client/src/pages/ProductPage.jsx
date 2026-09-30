@@ -218,7 +218,7 @@ export default function ProductPage() {
                       onClick={() => {
                         const nextVariant = product.variants.find((variant) => (
                           variant.color.name === color.name && variant.stock > 0
-                        ));
+                        )) || product.variants.find((variant) => variant.color.name === color.name);
                         setSelectedVariantSku(nextVariant?.sku || '');
                         setQuantity(1);
                         setErrorMessage('');
