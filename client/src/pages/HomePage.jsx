@@ -52,8 +52,8 @@ export default function HomePage() {
           loading="eager"
         />
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
-        <div className="mx-auto w-full max-w-[1280px] px-6 py-28 md:px-10">
-          <div className="max-w-2xl text-white">
+        <div className="mx-auto w-full min-w-0 max-w-[1280px] px-6 py-28 md:px-10">
+          <div className="min-w-0 max-w-2xl text-white">
             <p className="mb-5 inline-flex items-center gap-2 font-['Inter'] text-xs font-semibold uppercase tracking-[0.2em] text-[#E2E8D1]">
               <Leaf size={16} aria-hidden="true" />
               Tabiiy materiallar · O‘ylangan dizayn
