@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Camera, LoaderCircle, Upload, X } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api, getApiErrorMessage } from '../lib/api.js';
+import ProfileAvatar from '../components/UI/ProfileAvatar.jsx';
 
 const formatPrice = (amount, currency = 'UZS') => new Intl.NumberFormat('uz-UZ', {
   style: 'currency',
@@ -17,8 +20,33 @@ const formatDate = (date) => new Intl.DateTimeFormat('uz-UZ', {
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const [logoutError, setLogoutError] = useState('');
+  const [avatarError, setAvatarError] = useState('');
+  const [avatarMessage, setAvatarMessage] = useState('');
+  const [previewUrl, setPreviewUrl] = useState('');
+  const avatarInput = useRef(null);
+  const avatarMutation = useMutation({
+    mutationFn: async (file) => {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      const { data } = await api.patch('/users/me/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return data.data.user;
+    },
+    onSuccess: (updatedUser) => {
+      updateUser(updatedUser);
+      setAvatarMessage('Profil rasmi saqlandi.');
+      setAvatarError('');
+      setPreviewUrl('');
+      if (avatarInput.current) avatarInput.current.value = '';
+    },
+    onError: (error) => {
+      setAvatarError(getApiErrorMessage(error, 'Profil rasmini yuklab bo‘lmadi.'));
+      setAvatarMessage('');
+    },
+  });
   const ordersQuery = useQuery({
     queryKey: ['my-orders'],
     queryFn: async () => {
@@ -35,6 +63,33 @@ export default function ProfilePage() {
     } catch (error) {
       setLogoutError(getApiErrorMessage(error, 'Tizimdan chiqishda xatolik yuz berdi.'));
     }
+  };
+
+  useEffect(() => {
+    if (!previewUrl) return undefined;
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
+
+  const handleAvatarChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setAvatarError('JPG, PNG yoki WebP formatidagi rasm tanlang.');
+      event.target.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarError('Rasm hajmi 5 MB dan oshmasligi kerak.');
+      event.target.value = '';
+      return;
+    }
+
+    setAvatarError('');
+    setAvatarMessage('');
+    setPreviewUrl(URL.createObjectURL(file));
+    avatarMutation.mutate(file);
   };
 
   return (
@@ -66,9 +121,46 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <aside className="space-y-5">
             <section className="rounded-xl bg-white p-6 shadow-card">
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#F0F2E8] font-['Playfair_Display'] text-xl font-bold text-[#56642B]">
-                {user?.name?.charAt(0)?.toUpperCase() || 'A'}
+              <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+                <div className="relative">
+                  <ProfileAvatar user={previewUrl ? { ...user, avatarUrl: previewUrl } : user} className="h-20 w-20 text-2xl shadow-sm" />
+                  <button
+                    type="button"
+                    onClick={() => avatarInput.current?.click()}
+                    disabled={avatarMutation.isPending}
+                    aria-label="Profil rasmini yuklash"
+                    className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#56642B] text-white shadow-sm hover:bg-[#71814B] disabled:opacity-60"
+                  >
+                    {avatarMutation.isPending ? <LoaderCircle size={16} className="animate-spin" /> : <Camera size={16} />}
+                  </button>
+                </div>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => avatarInput.current?.click()}
+                    disabled={avatarMutation.isPending}
+                    className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#E5E5E5] px-3 font-['Inter'] text-sm font-semibold text-[#38452A] hover:border-[#71814B] disabled:opacity-60"
+                  >
+                    <Upload size={15} aria-hidden="true" />
+                    {avatarMutation.isPending ? 'Yuklanmoqda…' : 'Rasmni o‘zgartirish'}
+                  </button>
+                  <p className="mt-2 font-['Inter'] text-xs text-[#6B6B6B]">JPG, PNG yoki WebP · 5 MB gacha</p>
+                  <input
+                    ref={avatarInput}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="sr-only"
+                    aria-label="Profil rasmi fayli"
+                    onChange={handleAvatarChange}
+                  />
+                </div>
               </div>
+              {avatarError && (
+                <p role="alert" className="mt-4 rounded-lg bg-red-50 px-3 py-2 font-['Inter'] text-sm text-red-700">{avatarError}</p>
+              )}
+              {avatarMessage && (
+                <p role="status" className="mt-4 rounded-lg bg-[#F0F2E8] px-3 py-2 font-['Inter'] text-sm text-[#56642B]">{avatarMessage}</p>
+              )}
               <h2 className="font-['Inter'] text-lg font-semibold text-[#1A1A1A]">
                 {[user?.name, user?.surname].filter(Boolean).join(' ')}
               </h2>

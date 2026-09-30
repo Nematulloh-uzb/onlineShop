@@ -45,6 +45,10 @@ export function AuthProvider({ children }) {
   const login = (credentials) => authenticate('/auth/login', credentials);
   const register = (details) => authenticate('/auth/register', details);
 
+  const updateUser = (nextUser) => {
+    setUser((current) => ({ ...current, ...nextUser }));
+  };
+
   const logout = async () => {
     setAuthError('');
     await api.post('/auth/logout');
@@ -59,6 +63,7 @@ export function AuthProvider({ children }) {
     authError,
     login,
     register,
+    updateUser,
     logout,
   }), [user, status, authError]);
 
