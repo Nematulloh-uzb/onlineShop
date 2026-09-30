@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { api } from '../../lib/api.js';
+import ProfileAvatar from '../UI/ProfileAvatar.jsx';
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -31,7 +32,6 @@ export default function Header() {
 
   const navLinks = [
     { to: '/', label: "Bosh sahifa", end: true },
-    { to: '/katalog/ayollar', label: 'Ayollar' },
     { to: '/katalog/erkaklar', label: 'Erkaklar' },
     { to: '/katalog/aksessuarlar', label: 'Aksessuarlar' },
   ];
@@ -46,16 +46,13 @@ export default function Header() {
     >
       <div className="h-20 max-w-[1280px] mx-auto px-6 md:px-10 flex items-center justify-between gap-4">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group">
+        <Link to="/" aria-label="AURA bosh sahifa" className="flex shrink-0 items-center group">
           <img
             src="/logo.svg"
-            alt="Aura Logo"
-            className="h-8 w-auto object-contain transition-transform group-hover:scale-105"
+            alt="AURA"
+            className="h-8 w-auto max-w-[128px] object-contain transition-transform group-hover:scale-105"
             onError={(e) => { e.target.style.display = 'none'; }}
           />
-          <span className="font-['Playfair_Display'] text-[22px] font-semibold tracking-widest text-[#1A1A1A] uppercase">
-            AURA
-          </span>
         </Link>
 
         {/* Desktop Nav */}
@@ -106,9 +103,15 @@ export default function Header() {
           <Link
             to={user ? '/profil' : '/kirish'}
             aria-label={user ? 'Shaxsiy kabinet' : 'Kirish'}
-            className="hidden sm:flex w-10 h-10 items-center justify-center rounded-full bg-[#8A9A5B] hover:bg-[#6E7A47] transition-colors"
+            className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 ring-black/5 transition-colors ${
+              user ? 'hover:ring-[#8A9A5B]' : 'bg-[#8A9A5B] hover:bg-[#6E7A47]'
+            }`}
           >
-            <span className="material-symbols-outlined text-white text-[18px]">{user ? 'account_circle' : 'person'}</span>
+            {user ? (
+              <ProfileAvatar user={user} className="h-full w-full" />
+            ) : (
+              <span className="material-symbols-outlined text-[18px] text-white">person</span>
+            )}
           </Link>
 
           {/* Mobile menu toggle */}
