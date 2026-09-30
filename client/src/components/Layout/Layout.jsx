@@ -6,7 +6,7 @@ export default function Layout() {
   return (
     <div className="min-h-screen flex flex-col bg-[#F9F9F9]">
       <Header />
-      <main className="flex-1 pt-20">
+      <main className="w-full min-w-0 flex-1 pt-20">
         <Outlet />
       </main>
       <Footer />
