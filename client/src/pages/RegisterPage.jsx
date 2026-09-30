@@ -1,25 +1,39 @@
 import { Helmet } from 'react-helmet-async';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext.jsx';
+import { getApiErrorMessage } from '../lib/api.js';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [form, setForm] = useState({ name: '', surname: '', email: '', password: '', confirm: '' });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (form.password !== form.confirm) {
-      alert("Parollar mos kelmaydi");
+      setError('Parollar bir-biriga mos kelmadi.');
       return;
     }
+    setError('');
     setLoading(true);
-    setTimeout(() => {
+    try {
+      await register({
+        name: form.name.trim(),
+        surname: form.surname.trim(),
+        email: form.email.trim().toLowerCase(),
+        password: form.password,
+      });
+      navigate('/profil', { replace: true });
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, 'Hisob yaratilmadi. Iltimos, qayta urinib ko‘ring.'));
+    } finally {
       setLoading(false);
-      navigate('/profil');
-    }, 1000);
+    }
   };
 
   const fields = [
@@ -50,15 +64,30 @@ export default function RegisterPage() {
             </p>
           </div>
 
+          {error && (
+            <p role="alert" className="mb-4 rounded-lg bg-red-50 px-4 py-3 font-['Inter'] text-[13px] text-red-700">
+              {error}
+            </p>
+          )}
+
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {fields.map(({ name, label, placeholder, type }) => (
               <div key={name}>
-                <label className="font-['Inter'] text-[13px] font-semibold text-[#1A1A1A] block mb-1">
+                <label htmlFor={`register-${name}`} className="font-['Inter'] text-[13px] font-semibold text-[#1A1A1A] block mb-1">
                   {label}
                 </label>
                 <input
+                  id={`register-${name}`}
                   name={name}
                   type={type}
+                  autoComplete={{
+                    name: 'given-name',
+                    surname: 'family-name',
+                    email: 'email',
+                    password: 'new-password',
+                    confirm: 'new-password',
+                  }[name]}
+                  minLength={type === 'password' ? 8 : undefined}
                   required
                   value={form[name]}
                   onChange={handleChange}

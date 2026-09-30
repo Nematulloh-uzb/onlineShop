@@ -1,21 +1,34 @@
 import { Helmet } from 'react-helmet-async';
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext.jsx';
+import { getApiErrorMessage } from '../lib/api.js';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
-    setTimeout(() => {
+    try {
+      await login({ email: form.email.trim().toLowerCase(), password: form.password });
+      const destination = location.state?.from;
+      navigate(destination ? `${destination.pathname}${destination.search || ''}${destination.hash || ''}` : '/profil', {
+        replace: true,
+      });
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, 'Kirish amalga oshmadi. Ma’lumotlarni tekshirib, qayta urinib ko‘ring.'));
+    } finally {
       setLoading(false);
-      navigate('/profil');
-    }, 1000);
+    }
   };
 
   return (
@@ -38,12 +51,19 @@ export default function LoginPage() {
             </p>
           </div>
 
+          {error && (
+            <p role="alert" className="mb-4 rounded-lg bg-red-50 px-4 py-3 font-['Inter'] text-[13px] text-red-700">
+              {error}
+            </p>
+          )}
+
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
               <label className="font-['Inter'] text-[13px] font-semibold text-[#1A1A1A] block mb-1">
                 Elektron pochta
               </label>
               <input
+                autoComplete="email"
                 name="email"
                 type="email"
                 required
@@ -58,11 +78,9 @@ export default function LoginPage() {
                 <label className="font-['Inter'] text-[13px] font-semibold text-[#1A1A1A]">
                   Parol
                 </label>
-                <Link to="/" className="font-['Inter'] text-[12px] text-[#8A9A5B] hover:text-[#6E7A47] transition-colors">
-                  Parolni unutdingizmi?
-                </Link>
               </div>
               <input
+                autoComplete="current-password"
                 name="password"
                 type="password"
                 required
