@@ -1,17 +1,9 @@
-import { Helmet } from 'react-helmet-async';
 import { useEffect, useMemo, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-
-const PRODUCTS = [
-  { name: "Zig'ir ko'ylak", price: '$120.00', category: 'Ayollar', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCbZfRhZ8ljS3J5KLjchqPNfMObsBefdPxBvT9ITDFx7nIxczO63NxOvhsXNdY8lGY-553Ro2-MX18QjtHwaPSJAjDYvwj-ERsbhXTrrOiXPOG7tAtkJTWUSo0YlrN-_zbyhBfq1ZwsO4bjbtQv5E-i4ZFNuNkqEQYQvdZztgKCeNL_S5kMCLGtlwfYsbF5D4LQbdVYiUdbaezLBKZa9M54-uIW0gHkQHjnUgSm86zxX24HkN5voOkvnQ', slug: 'zigir-koylak' },
-  { name: 'Paxta futbolka', price: '$45.00', category: 'Erkaklar', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDrtfuxAqNwPIXymAOOOAnEiIivPUZ619lTg3EpkRQayCdwP4MEeviQwU6H0Mb6Vp0USDIvtMQOf0PuMRzlv8UIjHg7zhz0GMrH-UmzjltqEX74DRdNFDYU4Jp49kb_B8ko9OIGez5Mjr22w98SfbGesJFAxyBJiKWXIGf5NCYnx5dxpvTeln3izXpfB3JX2ksLmHhvjrvOJQCrpVSX4yyTTWj6SFE5JqhzXmNOdgc-lUF2QMFnHADohg', slug: 'paxta-futbolka' },
-  { name: 'Jun palto', price: '$280.00', category: 'Ayollar', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAAeFl5pxoMuRsZj0MMy4ZH_LrKSePpCtMmj-a1PHRkXaW-Gavnh2SCudeWAR1-lrH8VWvodDne_SxD9KVM2XaLnCLR028K8OZiyga460QgYDFHHBAWNJuNF4ivfj378fO3l6_2eHLawqiCH5EyNtuUUtxBibL2zEsoD9ZFolkTCgRjkzWHqVSmsKCv_loJJgxDH6DC_HuFsW8bOVTtSMT_ZAY9CebS55Smp5kkSJWIAQ0KZIBu0SiY7w', slug: 'jun-palto' },
-  { name: 'Ipak bluzka', price: '$150.00', category: 'Ayollar', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBo1t5eThbUXz1wkp4sNn2efaAT3CDwzpv-DARk5tEJYjJkc3Q_j3DKZfCaVJlHGfg5XpqneMkIpslcsOmlrv_LjgrKo2RpQJQaktodbmwCanaR3XYPEb-NwI2D9vbeGeiaG15pF-pwsnqKA0lDIrwJrnqSPQziH83DLWKUkW4JP6ZQmCPn5KRXpFhR8Us_2bDQxYtWsSpUWHY44JNntMdSKyW1W8uKoFOmUD3PWeGCEPFuj5guuJ7bNQ', slug: 'ipak-bluzka' },
-  { name: 'Keng shim', price: '$95.00', category: 'Erkaklar', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCnlneYaKpJq-XvSjh97ImN8IRz4R38HFBsZKy-1Prn1OCsSxKH-yNW-8qt05I6ijMNcK3U5RasPQS4-29F1HwSxxStFXyuC7618P-6-APAzBot2Tdrr-5QIf1k4fl0aW16TV7MOkmD396Cj_j6Ug5dNFefFfZmmozWrZ_5G6dsoDFo-61w5M4yvYBkbp3n3TFUijqGS-hqKlPNVKZuj_kMm0jwZ6Q8q1_A_cgv_c_f01q4yIDGI3WELw', slug: 'keng-shim' },
-  { name: 'Trikotaj kardigan', price: '$180.00', category: 'Ayollar', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB6oIJskcCP8bbqrLFxQ1ULKMCoDBKLIuK-MuZ889o37ZjDKYGCiff3HwIkEZLtD3uv2OEoi0TBR_STsL2RzeE2MGof_PFOAfg2jrlx_OSa_tt7hSxQLTp_PaUexHnEoF_Su4w3P7WqeX4d8tUchHpAn5cC_9Qs4kxNdc5zVHex282IYoquGYteNRWIP00W4jZGDPXIoCs0b1wZ5GziNP7ylMnfkVWzmdKVmzox741c5ISOs_9A9HIS-w', slug: 'trikotaj-kardigan' },
-  { name: 'Charm kamar', price: '$65.00', category: 'Aksessuarlar', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB-8iCV5uJPzKTNOk95ae2DBlwXExWIsElQjIo1cHaTmyOKJSHVTFtPumzSpNPfU6clf03YMVqXNcdq_YyCisGtkG7T45hq7vleWO5meNkJ36ctWIeJfn3-Z5qFApI3hkzRtT-sJFAYgYLjX8K-zn8oO2DtUZXT6ENZAMPAmvu8MnEni07g9hPX7jXukUzm1WsuHf7i5uyzjmMjL0Cx1pRMra8jHEajyyKpghCDH2P8HrYw47hJcZkmjA', slug: 'charm-kamar' },
-  { name: "Yozgi ko'ylak", price: '$135.00', category: 'Ayollar', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBmHkcCf9qRIQha12NFPqS_FLd5RVoHQAmRviyJ4LYi0nO4RtvQ_QbqJ-XI_mf9w1xMM3d03DMTG84CT6zgfjOP5G_AW9n4PrieHMg-kXBVPXzZwWZ8YF-atI8evtIvmyXDEnehSVl4lc9RzWJ7_SqSTNWSvhCDfm4lskRbbUWaNmXWKgVFf1eQBXmi9VJFCdCkrGugPcJK0nQByQa26uQ1TbPzJ4aHHOpO3j5y963dyK4GvQkUfSguAg', slug: 'yozgi-koylak' },
-];
+import WishlistToggle from '../components/UI/WishlistToggle.jsx';
+import { api, getApiErrorMessage } from '../lib/api.js';
 
 const FILTERS = [
   { label: 'Barchasi', slug: '' },
@@ -20,25 +12,32 @@ const FILTERS = [
   { label: 'Aksessuarlar', slug: 'aksessuarlar' },
 ];
 const SORT_OPTIONS = [
-  { label: 'Yangilar', value: 'newest' },
-  { label: "Narx: kamdan ko'p", value: 'price-ascending' },
-  { label: "Narx: ko'pdan kam", value: 'price-descending' },
+  { label: 'Yangilar', value: 'yangi' },
+  { label: "Narx: kamdan ko'p", value: 'narx_osish' },
+  { label: "Narx: ko'pdan kam", value: 'narx_kamayish' },
+  { label: 'Mashhurlar', value: 'mashhur' },
 ];
-const CATEGORY_BY_SLUG = Object.fromEntries(
-  FILTERS.filter(({ slug }) => slug).map(({ label, slug }) => [slug, label])
-);
+const CATEGORIES = new Map(FILTERS.map(({ label, slug }) => [slug, label]));
+
+const formatPrice = (price, currency = 'UZS') => new Intl.NumberFormat('uz-UZ', {
+  style: 'currency',
+  currency,
+  maximumFractionDigits: 0,
+}).format(price);
 
 export default function CatalogPage() {
   const { categorySlug } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const searchInput = useRef(null);
-  const activeFilter = CATEGORY_BY_SLUG[categorySlug] || 'Barchasi';
+  const categoryIsValid = CATEGORIES.has(categorySlug || '');
+  const activeCategory = categoryIsValid ? categorySlug || '' : '';
+  const activeFilter = CATEGORIES.get(activeCategory) || 'Barchasi';
   const searchQuery = searchParams.get('search') || '';
   const requestedSort = searchParams.get('sort');
   const sortBy = SORT_OPTIONS.some(({ value }) => value === requestedSort)
     ? requestedSort
-    : 'newest';
+    : 'yangi';
 
   useEffect(() => {
     if (searchParams.has('search') && document.activeElement !== searchInput.current) {
@@ -46,24 +45,22 @@ export default function CatalogPage() {
     }
   }, [searchParams]);
 
-  const filtered = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLocaleLowerCase();
-    const results = PRODUCTS.filter((product) => {
-      const matchesCategory = activeFilter === 'Barchasi' || product.category === activeFilter;
-      const matchesSearch = !normalizedQuery
-        || product.name.toLocaleLowerCase().includes(normalizedQuery)
-        || product.category.toLocaleLowerCase().includes(normalizedQuery);
-      return matchesCategory && matchesSearch;
-    });
+  const productsQuery = useQuery({
+    queryKey: ['products', activeCategory, searchQuery, sortBy],
+    queryFn: async () => {
+      const { data } = await api.get('/products', {
+        params: {
+          limit: 100,
+          ...(activeCategory && { category: activeCategory }),
+          ...(searchQuery.trim() && { q: searchQuery.trim() }),
+          sort: sortBy,
+        },
+      });
+      return data;
+    },
+  });
 
-    if (sortBy === 'price-ascending') {
-      return results.sort((a, b) => Number.parseFloat(a.price.slice(1)) - Number.parseFloat(b.price.slice(1)));
-    }
-    if (sortBy === 'price-descending') {
-      return results.sort((a, b) => Number.parseFloat(b.price.slice(1)) - Number.parseFloat(a.price.slice(1)));
-    }
-    return results;
-  }, [activeFilter, searchQuery, sortBy]);
+  const products = useMemo(() => productsQuery.data?.data.products || [], [productsQuery.data]);
 
   const updateSearch = (value) => {
     setSearchParams((current) => {
@@ -77,7 +74,7 @@ export default function CatalogPage() {
   const updateSort = (value) => {
     setSearchParams((current) => {
       const next = new URLSearchParams(current);
-      if (value === 'newest') next.delete('sort');
+      if (value === 'yangi') next.delete('sort');
       else next.set('sort', value);
       return next;
     }, { replace: true });
@@ -91,41 +88,43 @@ export default function CatalogPage() {
   return (
     <>
       <Helmet>
-        <title>Katalog — AURA</title>
-        <meta name="description" content="Barqaror va ekologik toza kiyim-kechaklar katalogi. Ayollar, erkaklar va aksessuarlar." />
+        <title>{activeFilter === 'Barchasi' ? 'Katalog' : activeFilter} — AURA</title>
+        <meta name="description" content="AURA ekologik moda kolleksiyasidan sifatli kiyim va aksessuarlarni toping." />
       </Helmet>
 
-      <div className="max-w-[1280px] mx-auto px-6 md:px-10 py-10">
-        {/* Header */}
+      <div className="mx-auto max-w-[1280px] px-6 py-10 md:px-10">
         <div className="mb-8">
-          <span className="font-['Inter'] text-[12px] font-semibold uppercase text-[#8A9A5B] tracking-widest block mb-2">
+          <span className="mb-2 block font-['Inter'] text-xs font-semibold uppercase tracking-widest text-[#8A9A5B]">
             AURA KOLLEKSIYASI
           </span>
-          <h1 className="font-['Playfair_Display'] text-[36px] md:text-[48px] font-bold text-[#1A1A1A] leading-tight">
+          <h1 className="font-['Playfair_Display'] text-4xl font-bold leading-tight text-[#1A1A1A] md:text-5xl">
             {activeFilter === 'Barchasi' ? 'Barcha mahsulotlar' : activeFilter}
           </h1>
+          <p className="mt-3 max-w-2xl font-['Inter'] text-sm leading-relaxed text-[#6B6B6B]">
+            Kundalik qulaylik va uzoq xizmat qiladigan tabiiy materiallardan tanlang.
+          </p>
         </div>
 
-        {/* Filters + Sort */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10">
-          <div className="flex items-center gap-2 flex-wrap">
+        <div className="mb-8 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+          <div className="flex flex-wrap items-center gap-2">
             {FILTERS.map(({ label, slug }) => (
               <button
                 key={label}
                 type="button"
                 onClick={() => selectCategory(slug)}
-                aria-pressed={activeFilter === label}
-                className={`h-9 px-4 rounded-full font-['Inter'] text-[13px] font-semibold border transition-all ${
-                  activeFilter === label
-                    ? 'bg-[#8A9A5B] border-[#8A9A5B] text-white'
-                    : 'bg-white border-[#E5E5E5] text-[#6B6B6B] hover:border-[#8A9A5B] hover:text-[#1A1A1A]'
+                aria-pressed={activeCategory === slug}
+                className={`h-10 rounded-full border px-4 font-['Inter'] text-[13px] font-semibold transition-colors ${
+                  activeCategory === slug
+                    ? 'border-[#8A9A5B] bg-[#8A9A5B] text-white'
+                    : 'border-[#E5E5E5] bg-white text-[#6B6B6B] hover:border-[#8A9A5B] hover:text-[#1A1A1A]'
                 }`}
               >
                 {label}
               </button>
             ))}
           </div>
-          <div className="flex flex-col sm:flex-row gap-3">
+
+          <div className="flex flex-col gap-3 sm:flex-row">
             <label className="sr-only" htmlFor="catalog-search">Mahsulot qidirish</label>
             <input
               ref={searchInput}
@@ -134,13 +133,14 @@ export default function CatalogPage() {
               value={searchQuery}
               onChange={(event) => updateSearch(event.target.value)}
               placeholder="Mahsulot qidirish"
-              className="h-10 min-w-0 sm:w-56 px-3 rounded-lg border border-[#E5E5E5] font-['Inter'] text-[13px] text-[#1A1A1A] bg-white focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]"
+              className="h-11 min-w-0 rounded-lg border border-[#E5E5E5] bg-white px-3 font-['Inter'] text-[13px] text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-[#8A9A5B] sm:w-60"
             />
+            <label className="sr-only" htmlFor="catalog-sort">Saralash</label>
             <select
+              id="catalog-sort"
               value={sortBy}
               onChange={(event) => updateSort(event.target.value)}
-              aria-label="Mahsulotlarni saralash"
-              className="h-10 px-3 rounded-lg border border-[#E5E5E5] font-['Inter'] text-[13px] text-[#1A1A1A] bg-white focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]"
+              className="h-11 rounded-lg border border-[#E5E5E5] bg-white px-3 font-['Inter'] text-[13px] text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]"
             >
               {SORT_OPTIONS.map(({ label, value }) => (
                 <option key={value} value={value}>{label}</option>
@@ -149,67 +149,115 @@ export default function CatalogPage() {
           </div>
         </div>
 
-        {/* Products Grid */}
-        <p className="font-['Inter'] text-[14px] text-[#6B6B6B] mb-4" aria-live="polite">
-          {filtered.length} ta mahsulot
-        </p>
-        {filtered.length ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filtered.map(({ name, price, image, slug }) => (
-              <div
-                key={slug}
-                className="group bg-white rounded-xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300"
-              >
-                <div className="relative aspect-[4/5] rounded-lg overflow-hidden bg-[#F0EDED] mb-3">
-                  <span className="absolute top-3 left-3 z-10 px-2.5 py-1 bg-[#8A9A5B] text-white font-['Inter'] text-[12px] font-semibold rounded-full">
-                    YANGI
-                  </span>
-                  <button
-                    aria-label="Istaklarga qo'shish"
-                    className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/90 text-[#6B6B6B] hover:text-red-500 transition-all flex items-center justify-center shadow-sm"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">favorite</span>
-                  </button>
-                  <div
-                    className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                    style={{ backgroundImage: `url('${image}')` }}
-                  />
-                  <Link
-                    to={`/mahsulot/${slug}`}
-                    className="absolute inset-x-3 bottom-3 h-12 bg-[#8A9A5B] hover:bg-[#6E7A47] text-white font-['Inter'] text-[14px] font-semibold rounded-lg flex items-center justify-center gap-2"
-                  >
-                    Batafsil ko'rish
-                  </Link>
-                </div>
-                <div className="px-1 pb-1">
-                  <Link to={`/mahsulot/${slug}`}>
-                    <h4 className="font-['Inter'] text-[16px] font-semibold text-[#1A1A1A] hover:text-[#8A9A5B] transition-colors mb-1">
-                      {name}
-                    </h4>
-                  </Link>
-                  <span className="font-['Inter'] text-[16px] text-[#1A1A1A] font-semibold">{price}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-xl border border-dashed border-[#C6C8B8] bg-white px-6 py-16 text-center">
+        {productsQuery.isLoading ? (
+          <p className="rounded-xl bg-white p-10 text-center font-['Inter'] text-sm text-[#6B6B6B]">
+            Katalog yuklanmoqda…
+          </p>
+        ) : productsQuery.isError ? (
+          <div role="alert" className="rounded-xl bg-white px-6 py-12 text-center shadow-card">
             <h2 className="font-['Playfair_Display'] text-2xl font-semibold text-[#1A1A1A]">
-              Mahsulot topilmadi
+              Katalogni yuklab bo‘lmadi
             </h2>
             <p className="mt-2 font-['Inter'] text-sm text-[#6B6B6B]">
-              Qidiruv so'zini yoki tanlangan kategoriyani o'zgartirib ko'ring.
+              {getApiErrorMessage(productsQuery.error, 'Serverga ulanib bo‘lmadi. Birozdan so‘ng qayta urinib ko‘ring.')}
             </p>
             <button
               type="button"
-              onClick={() => {
-                navigate('/katalog');
-              }}
-              className="mt-5 rounded-lg bg-[#8A9A5B] px-5 py-3 font-['Inter'] text-sm font-semibold text-white transition-colors hover:bg-[#6E7A47]"
+              onClick={() => productsQuery.refetch()}
+              className="mt-5 rounded-lg bg-[#8A9A5B] px-5 py-3 font-['Inter'] text-sm font-semibold text-white hover:bg-[#6E7A47]"
             >
-              Barcha mahsulotlarni ko'rish
+              Qayta yuklash
             </button>
           </div>
+        ) : (
+          <>
+            <p className="mb-4 font-['Inter'] text-sm text-[#6B6B6B]" aria-live="polite">
+              {productsQuery.data.meta.total} ta mahsulot
+            </p>
+            {products.length ? (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                {products.map((product) => {
+                  const image = product.images?.[0];
+                  const available = product.variants?.some((variant) => variant.stock > 0);
+                  return (
+                    <article
+                      key={product._id}
+                      className="group overflow-hidden rounded-xl bg-white p-3 shadow-card transition-shadow hover:shadow-card-hover"
+                    >
+                      <Link
+                        to={`/mahsulot/${product.slug}`}
+                        aria-label={`${product.name} mahsulotini ko‘rish`}
+                        className="relative block aspect-[4/5] overflow-hidden rounded-lg bg-[#F0EDED]"
+                      >
+                        {image?.url ? (
+                          <img
+                            src={image.url}
+                            alt={image.alt || product.name}
+                            loading="lazy"
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-[#8A9A5B]">
+                            <span className="material-symbols-outlined text-5xl">image</span>
+                          </div>
+                        )}
+                        {product.discountPercent > 0 && (
+                          <span className="absolute left-3 top-3 rounded-full bg-[#8A9A5B] px-3 py-1 font-['Inter'] text-xs font-semibold text-white">
+                            −{product.discountPercent}%
+                          </span>
+                        )}
+                        <WishlistToggle
+                          productId={product._id}
+                          className="absolute right-3 top-3 z-10 h-10 w-10 rounded-full bg-white/95 text-[#56642B] shadow-sm hover:text-red-600"
+                        />
+                        {!available && (
+                          <span className="absolute inset-x-0 bottom-0 bg-black/65 px-3 py-2 text-center font-['Inter'] text-xs font-semibold text-white">
+                            Hozircha mavjud emas
+                          </span>
+                        )}
+                      </Link>
+                      <div className="px-1 pb-2 pt-4">
+                        <p className="mb-1 font-['Inter'] text-[11px] font-semibold uppercase tracking-wider text-[#8A9A5B]">
+                          {product.category?.name || product.ecoBadge}
+                        </p>
+                        <Link to={`/mahsulot/${product.slug}`}>
+                          <h2 className="font-['Inter'] text-sm font-semibold text-[#1A1A1A] hover:text-[#56642B]">
+                            {product.name}
+                          </h2>
+                        </Link>
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="font-['Inter'] text-base font-bold text-[#1A1A1A]">
+                            {formatPrice(product.price, product.currency)}
+                          </span>
+                          {product.compareAtPrice > product.price && (
+                            <span className="font-['Inter'] text-xs text-[#6B6B6B] line-through">
+                              {formatPrice(product.compareAtPrice, product.currency)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-[#C6C8B8] bg-white px-6 py-16 text-center">
+                <h2 className="font-['Playfair_Display'] text-2xl font-semibold text-[#1A1A1A]">
+                  Mahsulot topilmadi
+                </h2>
+                <p className="mt-2 font-['Inter'] text-sm text-[#6B6B6B]">
+                  Qidiruv so‘zini yoki tanlangan kategoriyani o‘zgartirib ko‘ring.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate('/katalog')}
+                  className="mt-5 rounded-lg bg-[#8A9A5B] px-5 py-3 font-['Inter'] text-sm font-semibold text-white hover:bg-[#6E7A47]"
+                >
+                  Barcha mahsulotlarni ko‘rish
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </>

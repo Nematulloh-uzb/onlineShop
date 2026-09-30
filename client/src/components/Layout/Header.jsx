@@ -31,8 +31,9 @@ export default function Header() {
 
   const navLinks = [
     { to: '/', label: "Bosh sahifa", end: true },
-    { to: '/katalog', label: "Do'kon" },
-    { to: '/katalog/kolleksiyalar', label: "Kolleksiyalar" },
+    { to: '/katalog/ayollar', label: 'Ayollar' },
+    { to: '/katalog/erkaklar', label: 'Erkaklar' },
+    { to: '/katalog/aksessuarlar', label: 'Aksessuarlar' },
   ];
 
   return (

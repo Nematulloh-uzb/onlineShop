@@ -29,7 +29,10 @@ export const getProducts = catchAsync(async (req, res) => {
     let catId = category;
     if (!category.match(/^[0-9a-fA-F]{24}$/)) {
       const foundCat = await Category.findOne({ slug: category });
-      if (foundCat) catId = foundCat._id;
+      if (!foundCat) {
+        throw new ApiError(400, 'Kategoriya topilmadi');
+      }
+      catId = foundCat._id;
     }
     queryObj.category = catId;
   }
@@ -42,8 +45,19 @@ export const getProducts = catchAsync(async (req, res) => {
   // Narx oralig'i
   if (minPrice || maxPrice) {
     queryObj.price = {};
-    if (minPrice) queryObj.price.$gte = Number(minPrice);
-    if (maxPrice) queryObj.price.$lte = Number(maxPrice);
+    if (minPrice) {
+      const minimum = Number(minPrice);
+      if (!Number.isFinite(minimum) || minimum < 0) throw new ApiError(400, 'Minimal narx noto‘g‘ri');
+      queryObj.price.$gte = minimum;
+    }
+    if (maxPrice) {
+      const maximum = Number(maxPrice);
+      if (!Number.isFinite(maximum) || maximum < 0) throw new ApiError(400, 'Maksimal narx noto‘g‘ri');
+      queryObj.price.$lte = maximum;
+    }
+    if (queryObj.price.$gte !== undefined && queryObj.price.$lte !== undefined && queryObj.price.$gte > queryObj.price.$lte) {
+      throw new ApiError(400, 'Narx oralig‘i noto‘g‘ri');
+    }
   }
 
   // O'lcham
@@ -53,7 +67,8 @@ export const getProducts = catchAsync(async (req, res) => {
 
   // Rang
   if (color) {
-    queryObj['variants.color.name'] = { $regex: new RegExp(color, 'i') };
+    const escapedColor = color.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    queryObj['variants.color.name'] = { $regex: new RegExp(escapedColor, 'i') };
   }
 
   // Ekologik sertifikatlangan
@@ -76,7 +91,8 @@ export const getProducts = catchAsync(async (req, res) => {
 
   // Matnli qidiruv
   if (q && q.trim()) {
-    const searchRegex = new RegExp(q.trim(), 'i');
+    const escapedQuery = q.trim().slice(0, 100).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const searchRegex = new RegExp(escapedQuery, 'i');
     queryObj.$or = [
       { name: searchRegex },
       { description: searchRegex },
@@ -100,8 +116,12 @@ export const getProducts = catchAsync(async (req, res) => {
     sortCriteria = { createdAt: -1 };
   }
 
-  const pageNum = Math.max(1, parseInt(page, 10));
-  const limitNum = Math.max(1, parseInt(limit, 10));
+  const requestedPage = Number.parseInt(page, 10);
+  const requestedLimit = Number.parseInt(limit, 10);
+  if (!Number.isInteger(requestedPage) || requestedPage < 1) throw new ApiError(400, 'Sahifa raqami noto‘g‘ri');
+  if (!Number.isInteger(requestedLimit) || requestedLimit < 1) throw new ApiError(400, 'Sahifadagi mahsulotlar soni noto‘g‘ri');
+  const pageNum = requestedPage;
+  const limitNum = Math.min(requestedLimit, 100);
   const skip = (pageNum - 1) * limitNum;
 
   const [products, total] = await Promise.all([
@@ -193,7 +213,8 @@ export const getSearchSuggestions = catchAsync(async (req, res) => {
     });
   }
 
-  const regex = new RegExp(q.trim(), 'i');
+  const escapedQuery = q.trim().slice(0, 100).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(escapedQuery, 'i');
   const products = await Product.find({
     isActive: true,
     $or: [{ name: regex }, { material: regex }, { tags: regex }],

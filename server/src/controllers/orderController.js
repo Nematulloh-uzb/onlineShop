@@ -17,7 +17,6 @@ export const createOrder = catchAsync(async (req, res, next) => {
     contact,
     promoCode: inputPromoCode,
     paymentMethod,
-    cardDetails,
   } = req.body;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
@@ -42,6 +41,11 @@ export const createOrder = catchAsync(async (req, res, next) => {
   let totalWaterSaved = 0;
 
   for (const item of items) {
+    const quantity = Number(item.quantity);
+    if (!item.productId || typeof item.variantSku !== 'string' || !Number.isInteger(quantity) || quantity < 1 || quantity > 10) {
+      return next(new ApiError(400, 'Buyurtmadagi mahsulot va miqdor ma‘lumotlari noto‘g‘ri'));
+    }
+
     const product = await Product.findOne({ _id: item.productId, isActive: true });
     if (!product) {
       return next(new ApiError(404, `Mahsulot topilmadi: ${item.name || item.productId}`));
@@ -52,7 +56,7 @@ export const createOrder = catchAsync(async (req, res, next) => {
       return next(new ApiError(400, `${product.name} ning tanlangan o‘lchami topilmadi`));
     }
 
-    if (variant.stock < item.quantity) {
+    if (variant.stock < quantity) {
       return next(
         new ApiError(
           400,
@@ -62,8 +66,8 @@ export const createOrder = catchAsync(async (req, res, next) => {
     }
 
     const unitPrice = product.price;
-    const lineTotal = unitPrice * item.quantity;
-    const waterSaved = (product.ecoImpact?.waterSavedLiters || 0) * item.quantity;
+    const lineTotal = unitPrice * quantity;
+    const waterSaved = (product.ecoImpact?.waterSavedLiters || 0) * quantity;
 
     subtotal += lineTotal;
     totalWaterSaved += waterSaved;
@@ -75,7 +79,7 @@ export const createOrder = catchAsync(async (req, res, next) => {
       color: variant.color,
       size: variant.size,
       sku: variant.sku,
-      quantity: item.quantity,
+      quantity,
       unitPrice,
       lineTotal,
       ecoBadge: product.ecoBadge,
@@ -93,25 +97,42 @@ export const createOrder = catchAsync(async (req, res, next) => {
       isActive: true,
     });
 
-    if (promo && (!promo.expiresAt || promo.expiresAt >= new Date()) && promo.usedCount < promo.maxUses) {
-      if (!promo.minOrderAmount || subtotal >= promo.minOrderAmount) {
-        if (promo.type === 'percent') {
-          discount = Math.round((subtotal * promo.value) / 100);
-        } else if (promo.type === 'fixed') {
-          discount = Math.min(subtotal, promo.value);
-        }
-        appliedPromo = promo;
-      }
+    if (!promo || (promo.expiresAt && promo.expiresAt < new Date()) || promo.usedCount >= promo.maxUses) {
+      return next(new ApiError(400, 'Promo-kod mavjud emas, muddati o‘tgan yoki foydalanish chegarasiga yetgan'));
     }
+    if (subtotal < promo.minOrderAmount) {
+      return next(new ApiError(400, `Ushbu promo-kod uchun eng kam buyurtma summasi ${promo.minOrderAmount} so‘m`));
+    }
+
+    if (promo.type === 'percent') {
+      discount = Math.round((subtotal * promo.value) / 100);
+    } else if (promo.type === 'fixed') {
+      discount = Math.min(subtotal, promo.value);
+    }
+    appliedPromo = promo;
   }
 
   // 3. Yetkazib berish va Soliq hisoblash
   const shipping = subtotal >= env.FREE_SHIPPING_THRESHOLD ? 0 : env.SHIPPING_FEE;
   const taxableAmount = Math.max(0, subtotal - discount);
   const tax = Math.round(taxableAmount * env.VAT_RATE);
-  const total = taxableAmount + shipping;
+  const total = taxableAmount + shipping + tax;
 
-  // 4. Atomik stock kamaytirish
+  const reservedItems = [];
+  const restoreStock = async () => {
+    await Promise.all(reservedItems.map(async (item) => {
+      const restored = await Product.findOneAndUpdate(
+        { _id: item.product, 'variants.sku': item.sku },
+        { $inc: { 'variants.$.stock': item.quantity, soldCount: -item.quantity } }
+      );
+      if (!restored) {
+        throw new Error(`Mahsulot zaxirasini qaytara olmadik: ${item.name} (${item.size})`);
+      }
+    }));
+    reservedItems.length = 0;
+  };
+
+  // 4. Zaxirani har bir variant uchun atomik kamaytirish
   for (const item of orderItems) {
     const updated = await Product.findOneAndUpdate(
       {
@@ -129,6 +150,7 @@ export const createOrder = catchAsync(async (req, res, next) => {
     );
 
     if (!updated) {
+      await restoreStock();
       return next(
         new ApiError(
           400,
@@ -136,76 +158,71 @@ export const createOrder = catchAsync(async (req, res, next) => {
         )
       );
     }
+    reservedItems.push(item);
   }
 
   // 5. Buyurtma raqamini generatsiya qilish
   const orderNumber = await generateOrderNumber();
 
-  // 6. To'lovni amalga oshirish (MockProvider)
+  // 6. To‘lov usuli mavjud provayderda qayta tekshiriladi
   let paymentResult;
   try {
     paymentResult = await paymentService.processPayment({
       orderNumber,
       amount: total,
       paymentMethod,
-      cardDetails,
     });
   } catch (payError) {
-    // To'lov muvaffaqiyatsiz bo'lsa, zaxiralarni qaytarish
-    for (const item of orderItems) {
-      await Product.findOneAndUpdate(
-        { _id: item.product, 'variants.sku': item.sku },
-        {
-          $inc: {
-            'variants.$.stock': item.quantity,
-            soldCount: -item.quantity,
-          },
-        }
-      );
-    }
+    await restoreStock();
     return next(payError);
   }
 
   // 7. Buyurtmani bazaga yozish
-  const order = await Order.create({
-    orderNumber,
-    user: req.user ? req.user._id : null,
-    guestEmail: req.user ? null : contact.email,
-    contact: {
-      email: contact.email,
-      phone: contact.phone,
-    },
-    items: orderItems,
-    shippingAddress,
-    pricing: {
-      subtotal,
-      discount,
-      shipping,
-      tax,
-      total,
-    },
-    promoCode: appliedPromo ? appliedPromo.code : null,
-    paymentMethod,
-    payment: {
-      status: paymentResult.status,
-      providerRef: paymentResult.providerRef,
-      paidAt: paymentResult.paidAt || (paymentResult.status === 'paid' ? new Date() : null),
-    },
-    status: paymentResult.status === 'paid' ? 'tasdiqlangan' : 'yangi',
-    statusHistory: [
-      {
-        status: 'yangi',
-        at: new Date(),
-        note: 'Buyurtma rasmiylashtirildi',
+  let order;
+  try {
+    order = await Order.create({
+      orderNumber,
+      user: req.user._id,
+      guestEmail: null,
+      contact: {
+        email: contact.email,
+        phone: contact.phone,
       },
-      ...(paymentResult.status === 'paid'
-        ? [{ status: 'tasdiqlangan', at: new Date(), note: 'To‘lov muvaffaqiyatli qabul qilindi' }]
-        : []),
-    ],
-    ecoImpactTotal: {
-      waterSavedLiters: totalWaterSaved,
-    },
-  });
+      items: orderItems,
+      shippingAddress,
+      pricing: {
+        subtotal,
+        discount,
+        shipping,
+        tax,
+        total,
+      },
+      promoCode: appliedPromo ? appliedPromo.code : null,
+      paymentMethod,
+      payment: {
+        status: paymentResult.status,
+        providerRef: paymentResult.providerRef,
+        paidAt: paymentResult.paidAt || (paymentResult.status === 'paid' ? new Date() : null),
+      },
+      status: paymentResult.status === 'paid' ? 'tasdiqlangan' : 'yangi',
+      statusHistory: [
+        {
+          status: 'yangi',
+          at: new Date(),
+          note: 'Buyurtma rasmiylashtirildi',
+        },
+        ...(paymentResult.status === 'paid'
+          ? [{ status: 'tasdiqlangan', at: new Date(), note: 'To‘lov muvaffaqiyatli qabul qilindi' }]
+          : []),
+      ],
+      ecoImpactTotal: {
+        waterSavedLiters: totalWaterSaved,
+      },
+    });
+  } catch (error) {
+    await restoreStock();
+    return next(error);
+  }
 
   // Agar promo kod ishlatilgan bo'lsa hisoblagichini oshirish
   if (appliedPromo) {
@@ -213,9 +230,7 @@ export const createOrder = catchAsync(async (req, res, next) => {
   }
 
   // Agar login qilingan bo'lsa savatini tozalash
-  if (req.user) {
-    await Cart.findOneAndUpdate({ user: req.user._id }, { items: [], promoCode: null });
-  }
+  await Cart.findOneAndUpdate({ user: req.user._id }, { items: [], promoCode: null });
 
   res.status(201).json({
     success: true,

@@ -29,10 +29,10 @@ function App() {
           <Route element={<RequireAuth />}>
             <Route path="savat" element={<CartPage />} />
             <Route path="tolov" element={<CheckoutPage />} />
+            <Route path="buyurtma/:orderNumber" element={<OrderSuccessPage />} />
             <Route path="profil" element={<ProfilePage />} />
             <Route path="istaklar" element={<WishlistPage />} />
           </Route>
-          <Route path="buyurtma/:orderNumber" element={<OrderSuccessPage />} />
           <Route path="kirish" element={<LoginPage />} />
           <Route path="royxat" element={<RegisterPage />} />
           <Route path="*" element={<NotFoundPage />} />

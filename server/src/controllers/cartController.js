@@ -3,6 +3,7 @@ import { Product } from '../models/Product.js';
 import { PromoCode } from '../models/PromoCode.js';
 import { ApiError } from '../utils/ApiError.js';
 import { catchAsync } from '../utils/catchAsync.js';
+import { cartWithSummary } from '../utils/cartSummary.js';
 
 // Foydalanuvchi savatini olish
 export const getCart = catchAsync(async (req, res) => {
@@ -17,7 +18,7 @@ export const getCart = catchAsync(async (req, res) => {
   res.status(200).json({
     success: true,
     data: {
-      cart,
+      cart: cartWithSummary(cart),
     },
   });
 });
@@ -25,9 +26,13 @@ export const getCart = catchAsync(async (req, res) => {
 // Savatga mahsulot qo'shish
 export const addItem = catchAsync(async (req, res, next) => {
   const { productId, variantSku, quantity = 1 } = req.body;
+  const requestedQuantity = Number(quantity);
 
   if (!productId || !variantSku) {
     return next(new ApiError(400, 'Mahsulot va variant ma‘lumotlarini kiriting'));
+  }
+  if (!Number.isInteger(requestedQuantity) || requestedQuantity < 1 || requestedQuantity > 10) {
+    return next(new ApiError(400, 'Miqdor 1 va 10 oralig‘idagi butun son bo‘lishi shart'));
   }
 
   const product = await Product.findOne({ _id: productId, isActive: true });
@@ -40,7 +45,7 @@ export const addItem = catchAsync(async (req, res, next) => {
     return next(new ApiError(404, 'Mahsulot varianti topilmadi'));
   }
 
-  if (variant.stock < quantity) {
+  if (variant.stock < requestedQuantity) {
     return next(new ApiError(400, `Ushbu o‘lchamdan omborda faqat ${variant.stock} dona mavjud`));
   }
 
@@ -49,10 +54,12 @@ export const addItem = catchAsync(async (req, res, next) => {
     cart = await Cart.create({ user: req.user._id, items: [] });
   }
 
-  const existingItemIndex = cart.items.findIndex((item) => item.variantSku === variantSku);
+  const existingItemIndex = cart.items.findIndex(
+    (item) => item.variantSku === variantSku && item.product.toString() === productId
+  );
 
   if (existingItemIndex > -1) {
-    const newQty = cart.items[existingItemIndex].quantity + Number(quantity);
+    const newQty = cart.items[existingItemIndex].quantity + requestedQuantity;
     if (newQty > variant.stock) {
       return next(new ApiError(400, `Omborda jami ${variant.stock} dona mavjud, ortiqcha qo‘shib bo‘lmaydi`));
     }
@@ -67,7 +74,7 @@ export const addItem = catchAsync(async (req, res, next) => {
       variantSku: variant.sku,
       color: variant.color,
       size: variant.size,
-      quantity: Number(quantity),
+      quantity: requestedQuantity,
       priceSnapshot: product.price,
     });
   }
@@ -78,7 +85,7 @@ export const addItem = catchAsync(async (req, res, next) => {
   res.status(200).json({
     success: true,
     data: {
-      cart,
+      cart: cartWithSummary(cart),
     },
   });
 });
@@ -89,8 +96,8 @@ export const updateItemQuantity = catchAsync(async (req, res, next) => {
   const { quantity } = req.body;
 
   const qty = Number(quantity);
-  if (!qty || qty < 1 || qty > 10) {
-    return next(new ApiError(400, 'Miqdor 1 va 10 oralig‘ida bo‘lishi shart'));
+  if (!Number.isInteger(qty) || qty < 1 || qty > 10) {
+    return next(new ApiError(400, 'Miqdor 1 va 10 oralig‘idagi butun son bo‘lishi shart'));
   }
 
   let cart = await Cart.findOne({ user: req.user._id });
@@ -118,7 +125,7 @@ export const updateItemQuantity = catchAsync(async (req, res, next) => {
   res.status(200).json({
     success: true,
     data: {
-      cart,
+      cart: cartWithSummary(cart),
     },
   });
 });
@@ -132,6 +139,11 @@ export const removeItem = catchAsync(async (req, res, next) => {
     return next(new ApiError(404, 'Savat topilmadi'));
   }
 
+  const item = cart.items.id(itemId);
+  if (!item) {
+    return next(new ApiError(404, 'Savatdagi mahsulot topilmadi'));
+  }
+
   cart.items.pull(itemId);
   await cart.save();
   cart = await Cart.findById(cart._id).populate('items.product').populate('promoCode');
@@ -139,7 +151,7 @@ export const removeItem = catchAsync(async (req, res, next) => {
   res.status(200).json({
     success: true,
     data: {
-      cart,
+      cart: cartWithSummary(cart),
     },
   });
 });
@@ -169,9 +181,17 @@ export const applyPromo = catchAsync(async (req, res, next) => {
     return next(new ApiError(400, 'Ushbu promo-kod foydalanish chegarasiga yetgan'));
   }
 
-  let cart = await Cart.findOne({ user: req.user._id });
+  let cart = await Cart.findOne({ user: req.user._id }).populate('items.product');
   if (!cart || cart.items.length === 0) {
     return next(new ApiError(400, 'Savat bo‘sh'));
+  }
+
+  const subtotal = cart.items.reduce(
+    (total, item) => total + (item.product?.price ?? item.priceSnapshot) * item.quantity,
+    0
+  );
+  if (subtotal < promo.minOrderAmount) {
+    return next(new ApiError(400, `Ushbu promo-kod uchun eng kam buyurtma summasi ${promo.minOrderAmount} so‘m`));
   }
 
   cart.promoCode = promo._id;
@@ -182,7 +202,7 @@ export const applyPromo = catchAsync(async (req, res, next) => {
     success: true,
     message: 'Promo-kod muvaffaqiyatli qo‘llandi',
     data: {
-      cart,
+      cart: cartWithSummary(cart),
     },
   });
 });
@@ -201,7 +221,7 @@ export const removePromo = catchAsync(async (req, res, next) => {
   res.status(200).json({
     success: true,
     data: {
-      cart,
+      cart: cartWithSummary(cart),
     },
   });
 });
@@ -253,7 +273,7 @@ export const mergeCart = catchAsync(async (req, res, next) => {
   res.status(200).json({
     success: true,
     data: {
-      cart,
+      cart: cartWithSummary(cart),
     },
   });
 });

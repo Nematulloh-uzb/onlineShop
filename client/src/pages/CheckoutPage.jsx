@@ -1,342 +1,311 @@
+import { useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, ArrowRight, Check, LockKeyhole, ShoppingBag } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext.jsx';
+import { api, getApiErrorMessage } from '../lib/api.js';
 
-const STEPS = ['Kontakt', 'Manzil', "To'lov"];
+const STEPS = ['Aloqa', 'Yetkazib berish', 'Tasdiqlash'];
+const formatPrice = (price, currency = 'UZS') => new Intl.NumberFormat('uz-UZ', {
+  style: 'currency',
+  currency,
+  maximumFractionDigits: 0,
+}).format(price);
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [step, setStep] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [errorMessage, setErrorMessage] = useState('');
   const [form, setForm] = useState({
-    email: '', phone: '',
-    firstName: '', lastName: '', street: '', city: '', zip: '',
-    cardName: '', cardNumber: '', cardExpiry: '', cardCvv: '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    firstName: user?.name || '',
+    lastName: user?.surname || '',
+    street: '',
+    city: '',
+    region: '',
+    zip: '',
   });
 
-  const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  const cartQuery = useQuery({
+    queryKey: ['cart'],
+    queryFn: async () => {
+      const { data } = await api.get('/cart');
+      return data.data.cart;
+    },
+  });
+  const cart = cartQuery.data;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (step < 2) {
-      setStep((s) => s + 1);
-    } else {
-      navigate('/buyurtma/AUR-2026-0001');
-    }
+  useEffect(() => {
+    const address = user?.addresses?.find((item) => item.isDefault) || user?.addresses?.[0];
+    if (!address) return;
+    setForm((current) => ({
+      ...current,
+      firstName: current.firstName || address.firstName || '',
+      lastName: current.lastName || address.lastName || '',
+      street: current.street || address.street || '',
+      city: current.city || address.city || '',
+      region: current.region || address.region || '',
+      zip: current.zip || address.postalCode || '',
+      phone: current.phone || address.phone || '',
+    }));
+  }, [user]);
+
+  const orderMutation = useMutation({
+    mutationFn: async () => {
+      const items = cart.items.map((item) => ({
+        productId: item.product?._id,
+        variantSku: item.variantSku,
+        quantity: item.quantity,
+      }));
+      if (items.some(({ productId }) => !productId)) {
+        throw new Error('Savatdagi mahsulotlardan biri endi mavjud emas. Savatni tekshirib ko‘ring.');
+      }
+
+      const { data } = await api.post('/orders', {
+        items,
+        contact: { email: form.email.trim(), phone: form.phone.trim() },
+        shippingAddress: {
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+          street: form.street.trim(),
+          city: form.city.trim(),
+          region: form.region.trim(),
+          postalCode: form.zip.trim(),
+          phone: form.phone.trim(),
+        },
+        promoCode: cart.promoCode?.code,
+        paymentMethod: 'cash',
+      });
+      return data.data.order;
+    },
+    onSuccess: (order) => {
+      queryClient.setQueryData(['cart'], undefined);
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: ['my-orders'] });
+      navigate(`/buyurtma/${encodeURIComponent(order.orderNumber)}`, { replace: true });
+    },
+    onError: (error) => {
+      setErrorMessage(getApiErrorMessage(error, error.message || 'Buyurtmani rasmiylashtirib bo‘lmadi.'));
+    },
+  });
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setForm((current) => ({ ...current, [name]: value }));
   };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    setErrorMessage('');
+    if (step < STEPS.length - 1) {
+      setStep((current) => current + 1);
+      return;
+    }
+    orderMutation.mutate();
+  };
+
+  if (cartQuery.isLoading) {
+    return <p className="mx-auto my-16 max-w-5xl rounded-xl bg-white p-10 text-center font-['Inter'] text-sm text-[#6B6B6B]">Savat tekshirilmoqda…</p>;
+  }
+
+  if (cartQuery.isError) {
+    return (
+      <div role="alert" className="mx-auto my-16 max-w-2xl rounded-xl bg-white p-10 text-center">
+        <p className="font-['Inter'] text-sm text-red-700">
+          {getApiErrorMessage(cartQuery.error, 'Savatni tekshirib bo‘lmadi.')}
+        </p>
+        <button type="button" onClick={() => cartQuery.refetch()} className="mt-5 rounded-lg bg-[#71814B] px-5 py-3 font-['Inter'] text-sm font-semibold text-white">
+          Qayta urinish
+        </button>
+      </div>
+    );
+  }
+
+  if (!cart?.items.length) {
+    return (
+      <div className="mx-auto my-16 max-w-2xl rounded-xl bg-white px-6 py-14 text-center shadow-card">
+        <ShoppingBag size={36} className="mx-auto mb-4 text-[#C6C8B8]" aria-hidden="true" />
+        <h1 className="font-['Playfair_Display'] text-2xl font-semibold text-[#1A1A1A]">Savat bo‘sh</h1>
+        <p className="mt-2 font-['Inter'] text-sm text-[#6B6B6B]">Buyurtmani rasmiylashtirishdan oldin mahsulot tanlang.</p>
+        <Link to="/katalog" className="mt-5 inline-flex h-11 items-center rounded-lg bg-[#71814B] px-5 font-['Inter'] text-sm font-semibold text-white">Katalogga o‘tish</Link>
+      </div>
+    );
+  }
+
+  const summary = cart.summary;
 
   return (
     <>
       <Helmet>
-        <title>To'lov — AURA</title>
+        <title>Buyurtmani rasmiylashtirish — AURA</title>
       </Helmet>
 
-      <div className="max-w-[1280px] mx-auto px-6 md:px-10 py-10">
-        <h1 className="font-['Playfair_Display'] text-[36px] font-bold text-[#1A1A1A] mb-8">
+      <main className="mx-auto max-w-[1280px] px-6 py-10 md:px-10">
+        <Link to="/savat" className="mb-5 inline-flex items-center gap-2 font-['Inter'] text-sm font-semibold text-[#56642B] hover:text-[#8A9A5B]">
+          <ArrowLeft size={17} aria-hidden="true" />
+          Savatga qaytish
+        </Link>
+        <h1 className="mb-8 font-['Playfair_Display'] text-3xl font-bold text-[#1A1A1A] md:text-4xl">
           Buyurtmani rasmiylashtirish
         </h1>
 
-        {/* Stepper */}
-        <div className="flex items-center gap-2 mb-10">
-          {STEPS.map((label, i) => (
-            <div key={label} className="flex items-center gap-2">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center font-['Inter'] text-[13px] font-bold transition-colors ${
-                  i <= step ? 'bg-[#8A9A5B] text-white' : 'bg-[#E5E5E5] text-[#6B6B6B]'
-                }`}
-              >
-                {i < step ? (
-                  <span className="material-symbols-outlined text-[16px]">check</span>
-                ) : (
-                  i + 1
-                )}
+        <ol aria-label="Buyurtma bosqichlari" className="mb-9 flex max-w-2xl items-center">
+          {STEPS.map((label, index) => (
+            <li key={label} className={`flex items-center ${index < STEPS.length - 1 ? 'flex-1' : ''}`}>
+              <div className="flex items-center gap-2">
+                <span className={`flex h-8 w-8 items-center justify-center rounded-full font-['Inter'] text-xs font-bold ${
+                  index <= step ? 'bg-[#71814B] text-white' : 'bg-[#EAE7E7] text-[#6B6B6B]'
+                }`}>
+                  {index < step ? <Check size={15} aria-hidden="true" /> : index + 1}
+                </span>
+                <span className={`hidden whitespace-nowrap font-['Inter'] text-xs font-semibold sm:inline ${
+                  index <= step ? 'text-[#56642B]' : 'text-[#6B6B6B]'
+                }`}>
+                  {label}
+                </span>
               </div>
-              <span
-                className={`font-['Inter'] text-[14px] font-semibold ${
-                  i <= step ? 'text-[#8A9A5B]' : 'text-[#6B6B6B]'
-                }`}
-              >
-                {label}
-              </span>
-              {i < STEPS.length - 1 && <div className="w-12 h-px bg-[#E5E5E5] mx-1" />}
-            </div>
+              {index < STEPS.length - 1 && <span className="mx-3 h-px flex-1 bg-[#E5E5E5]" />}
+            </li>
           ))}
-        </div>
+        </ol>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          {/* Form */}
-          <div className="lg:col-span-2">
-            <form onSubmit={handleSubmit} className="bg-white rounded-xl p-6 shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
-              {/* Step 0: Contact */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <section className="lg:col-span-2">
+            <form onSubmit={handleSubmit} className="rounded-xl bg-white p-5 shadow-card sm:p-8">
               {step === 0 && (
-                <div className="flex flex-col gap-4">
-                  <h2 className="font-['Playfair_Display'] text-[22px] font-semibold text-[#1A1A1A] mb-2">
-                    Aloqa ma'lumotlari
-                  </h2>
+                <fieldset className="space-y-5">
+                  <legend className="mb-5 font-['Playfair_Display'] text-xl font-semibold text-[#1A1A1A]">Aloqa ma’lumotlari</legend>
                   <div>
-                    <label className="font-['Inter'] text-[13px] font-semibold text-[#1A1A1A] block mb-1">
-                      Elektron pochta *
-                    </label>
-                    <input
-                      name="email"
-                      type="email"
-                      required
-                      value={form.email}
-                      onChange={handleChange}
-                      placeholder="siz@email.com"
-                      className="w-full h-12 px-4 rounded-lg border border-[#E5E5E5] font-['Inter'] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]"
-                    />
+                    <label htmlFor="checkout-email" className="mb-1 block font-['Inter'] text-sm font-semibold text-[#1A1A1A]">Elektron pochta</label>
+                    <input id="checkout-email" name="email" type="email" autoComplete="email" required maxLength={254} value={form.email} onChange={handleChange} className="h-12 w-full rounded-lg border border-[#E5E5E5] px-4 font-['Inter'] text-sm focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]" />
                   </div>
                   <div>
-                    <label className="font-['Inter'] text-[13px] font-semibold text-[#1A1A1A] block mb-1">
-                      Telefon *
-                    </label>
-                    <input
-                      name="phone"
-                      type="tel"
-                      required
-                      value={form.phone}
-                      onChange={handleChange}
-                      placeholder="+998 90 123 45 67"
-                      className="w-full h-12 px-4 rounded-lg border border-[#E5E5E5] font-['Inter'] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]"
-                    />
+                    <label htmlFor="checkout-phone" className="mb-1 block font-['Inter'] text-sm font-semibold text-[#1A1A1A]">Telefon</label>
+                    <input id="checkout-phone" name="phone" type="tel" autoComplete="tel" required maxLength={30} value={form.phone} onChange={handleChange} placeholder="+998 90 123 45 67" className="h-12 w-full rounded-lg border border-[#E5E5E5] px-4 font-['Inter'] text-sm focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]" />
                   </div>
-                </div>
+                </fieldset>
               )}
 
-              {/* Step 1: Address */}
               {step === 1 && (
-                <div className="flex flex-col gap-4">
-                  <h2 className="font-['Playfair_Display'] text-[22px] font-semibold text-[#1A1A1A] mb-2">
-                    Yetkazib berish manzili
-                  </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {[
-                      { name: 'firstName', label: 'Ism', placeholder: 'Dilnoza' },
-                      { name: 'lastName', label: 'Familiya', placeholder: 'Karimova' },
-                    ].map(({ name, label, placeholder }) => (
-                      <div key={name}>
-                        <label className="font-['Inter'] text-[13px] font-semibold text-[#1A1A1A] block mb-1">
-                          {label} *
-                        </label>
-                        <input
-                          name={name}
-                          required
-                          value={form[name]}
-                          onChange={handleChange}
-                          placeholder={placeholder}
-                          className="w-full h-12 px-4 rounded-lg border border-[#E5E5E5] font-['Inter'] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]"
-                        />
-                      </div>
-                    ))}
+                <fieldset className="space-y-5">
+                  <legend className="mb-5 font-['Playfair_Display'] text-xl font-semibold text-[#1A1A1A]">Yetkazib berish manzili</legend>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label htmlFor="checkout-firstName" className="mb-1 block font-['Inter'] text-sm font-semibold">Ism</label>
+                      <input id="checkout-firstName" name="firstName" autoComplete="given-name" required maxLength={60} value={form.firstName} onChange={handleChange} className="h-12 w-full rounded-lg border border-[#E5E5E5] px-4 font-['Inter'] text-sm focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]" />
+                    </div>
+                    <div>
+                      <label htmlFor="checkout-lastName" className="mb-1 block font-['Inter'] text-sm font-semibold">Familiya</label>
+                      <input id="checkout-lastName" name="lastName" autoComplete="family-name" required maxLength={60} value={form.lastName} onChange={handleChange} className="h-12 w-full rounded-lg border border-[#E5E5E5] px-4 font-['Inter'] text-sm focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]" />
+                    </div>
                   </div>
                   <div>
-                    <label className="font-['Inter'] text-[13px] font-semibold text-[#1A1A1A] block mb-1">
-                      Ko'cha manzili *
-                    </label>
-                    <input
-                      name="street"
-                      required
-                      value={form.street}
-                      onChange={handleChange}
-                      placeholder="Mustaqillik ko'chasi, 1-uy"
-                      className="w-full h-12 px-4 rounded-lg border border-[#E5E5E5] font-['Inter'] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]"
-                    />
+                    <label htmlFor="checkout-street" className="mb-1 block font-['Inter'] text-sm font-semibold">Ko‘cha va uy</label>
+                    <input id="checkout-street" name="street" autoComplete="street-address" required maxLength={200} value={form.street} onChange={handleChange} className="h-12 w-full rounded-lg border border-[#E5E5E5] px-4 font-['Inter'] text-sm focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]" />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
-                      <label className="font-['Inter'] text-[13px] font-semibold text-[#1A1A1A] block mb-1">
-                        Shahar *
-                      </label>
-                      <input
-                        name="city"
-                        required
-                        value={form.city}
-                        onChange={handleChange}
-                        placeholder="Toshkent"
-                        className="w-full h-12 px-4 rounded-lg border border-[#E5E5E5] font-['Inter'] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]"
-                      />
+                      <label htmlFor="checkout-city" className="mb-1 block font-['Inter'] text-sm font-semibold">Shahar / tuman</label>
+                      <input id="checkout-city" name="city" autoComplete="address-level2" required maxLength={80} value={form.city} onChange={handleChange} className="h-12 w-full rounded-lg border border-[#E5E5E5] px-4 font-['Inter'] text-sm focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]" />
                     </div>
                     <div>
-                      <label className="font-['Inter'] text-[13px] font-semibold text-[#1A1A1A] block mb-1">
-                        Pochta indeksi
-                      </label>
-                      <input
-                        name="zip"
-                        value={form.zip}
-                        onChange={handleChange}
-                        placeholder="100000"
-                        className="w-full h-12 px-4 rounded-lg border border-[#E5E5E5] font-['Inter'] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]"
-                      />
+                      <label htmlFor="checkout-region" className="mb-1 block font-['Inter'] text-sm font-semibold">Viloyat / hudud</label>
+                      <input id="checkout-region" name="region" autoComplete="address-level1" required maxLength={80} value={form.region} onChange={handleChange} className="h-12 w-full rounded-lg border border-[#E5E5E5] px-4 font-['Inter'] text-sm focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]" />
                     </div>
                   </div>
-                </div>
+                  <div>
+                    <label htmlFor="checkout-zip" className="mb-1 block font-['Inter'] text-sm font-semibold">Pochta indeksi <span className="font-normal text-[#6B6B6B]">(ixtiyoriy)</span></label>
+                    <input id="checkout-zip" name="zip" autoComplete="postal-code" maxLength={20} value={form.zip} onChange={handleChange} className="h-12 w-full rounded-lg border border-[#E5E5E5] px-4 font-['Inter'] text-sm focus:outline-none focus:ring-2 focus:ring-[#8A9A5B] sm:max-w-xs" />
+                  </div>
+                </fieldset>
               )}
 
-              {/* Step 2: Payment */}
               {step === 2 && (
-                <div className="flex flex-col gap-4">
-                  <h2 className="font-['Playfair_Display'] text-[22px] font-semibold text-[#1A1A1A] mb-2">
-                    To'lov usuli
-                  </h2>
-
-                  {/* Payment methods */}
-                  <div className="flex flex-col gap-3 mb-2">
-                    {[
-                      { id: 'card', label: "Kredit/Debit karta", icon: 'credit_card' },
-                      { id: 'payme', label: "Payme", icon: 'phone_iphone' },
-                      { id: 'click', label: "Click", icon: 'touch_app' },
-                      { id: 'cash', label: "Yetkazib berganda to'lash", icon: 'local_shipping' },
-                    ].map(({ id, label, icon }) => (
-                      <label
-                        key={id}
-                        className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                          paymentMethod === id
-                            ? 'border-[#8A9A5B] bg-[#F0F2E8]'
-                            : 'border-[#E5E5E5] hover:border-[#8A9A5B]/50'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="payment"
-                          value={id}
-                          checked={paymentMethod === id}
-                          onChange={() => setPaymentMethod(id)}
-                          className="sr-only"
-                        />
-                        <span className="material-symbols-outlined text-[22px] text-[#8A9A5B]">{icon}</span>
-                        <span className="font-['Inter'] text-[15px] font-semibold text-[#1A1A1A]">{label}</span>
-                        {paymentMethod === id && (
-                          <span className="ml-auto material-symbols-outlined text-[20px] text-[#8A9A5B]">check_circle</span>
-                        )}
-                      </label>
-                    ))}
+                <fieldset>
+                  <legend className="mb-5 font-['Playfair_Display'] text-xl font-semibold text-[#1A1A1A]">To‘lov usuli</legend>
+                  <label className="flex cursor-pointer items-start gap-3 rounded-xl border-2 border-[#71814B] bg-[#F5F7F0] p-5">
+                    <input type="radio" checked readOnly aria-label="Yetkazib berganda to‘lash" className="mt-1 accent-[#71814B]" />
+                    <span>
+                      <span className="block font-['Inter'] text-sm font-semibold text-[#1A1A1A]">Yetkazib berganda to‘lash</span>
+                      <span className="mt-1 block font-['Inter'] text-xs leading-relaxed text-[#6B6B6B]">
+                        Buyurtma hozir ro‘yxatdan o‘tadi. To‘lovni mahsulot yetkazilganda amalga oshirasiz.
+                      </span>
+                    </span>
+                  </label>
+                  <p className="mt-4 font-['Inter'] text-xs leading-relaxed text-[#6B6B6B]">
+                    Onlayn karta va Payme/Click to‘lovlari provayder integratsiyasi yoqilmagani uchun vaqtincha mavjud emas.
+                  </p>
+                  <div className="mt-6 rounded-lg bg-[#F9F9F9] p-4 font-['Inter'] text-sm text-[#1A1A1A]">
+                    <p className="font-semibold">Yetkazib berish manzili</p>
+                    <p className="mt-2 text-[#6B6B6B]">{form.firstName} {form.lastName}, {form.street}, {form.city}, {form.region}</p>
+                    <p className="mt-1 text-[#6B6B6B]">{form.phone} · {form.email}</p>
                   </div>
-
-                  {paymentMethod === 'card' && (
-                    <div className="flex flex-col gap-3 border border-[#E5E5E5] rounded-xl p-4">
-                      <div>
-                        <label className="font-['Inter'] text-[13px] font-semibold text-[#1A1A1A] block mb-1">
-                          Karta raqami
-                        </label>
-                        <input
-                          name="cardNumber"
-                          value={form.cardNumber}
-                          onChange={handleChange}
-                          placeholder="0000 0000 0000 0000"
-                          maxLength={19}
-                          className="w-full h-12 px-4 rounded-lg border border-[#E5E5E5] font-['Inter'] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#8A9A5B] font-mono tracking-widest"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="font-['Inter'] text-[13px] font-semibold text-[#1A1A1A] block mb-1">
-                            Muddati (MM/YY)
-                          </label>
-                          <input
-                            name="cardExpiry"
-                            value={form.cardExpiry}
-                            onChange={handleChange}
-                            placeholder="12/28"
-                            maxLength={5}
-                            className="w-full h-12 px-4 rounded-lg border border-[#E5E5E5] font-['Inter'] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]"
-                          />
-                        </div>
-                        <div>
-                          <label className="font-['Inter'] text-[13px] font-semibold text-[#1A1A1A] block mb-1">
-                            CVV
-                          </label>
-                          <input
-                            name="cardCvv"
-                            value={form.cardCvv}
-                            onChange={handleChange}
-                            placeholder="•••"
-                            maxLength={4}
-                            type="password"
-                            className="w-full h-12 px-4 rounded-lg border border-[#E5E5E5] font-['Inter'] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                </fieldset>
               )}
 
-              {/* Navigation buttons */}
-              <div className="flex items-center justify-between mt-8 gap-3">
-                {step > 0 && (
+              {errorMessage && (
+                <p role="alert" className="mt-5 rounded-lg bg-red-50 px-4 py-3 font-['Inter'] text-sm text-red-700">
+                  {errorMessage}
+                </p>
+              )}
+
+              <div className="mt-8 flex items-center justify-between gap-3">
+                {step > 0 ? (
                   <button
                     type="button"
-                    onClick={() => setStep((s) => s - 1)}
-                    className="h-12 px-6 rounded-lg border-2 border-[#E5E5E5] font-['Inter'] text-[15px] font-semibold text-[#6B6B6B] hover:border-[#8A9A5B] hover:text-[#8A9A5B] transition-all flex items-center gap-2"
+                    onClick={() => setStep((current) => current - 1)}
+                    disabled={orderMutation.isPending}
+                    className="inline-flex h-12 items-center gap-2 rounded-lg border border-[#E5E5E5] px-5 font-['Inter'] text-sm font-semibold text-[#56642B] hover:border-[#71814B]"
                   >
-                    <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                    <ArrowLeft size={16} aria-hidden="true" />
                     Orqaga
                   </button>
-                )}
+                ) : <span />}
                 <button
                   type="submit"
-                  className="ml-auto h-12 px-8 bg-[#8A9A5B] hover:bg-[#6E7A47] text-white font-['Inter'] text-[15px] font-semibold rounded-lg transition-colors flex items-center gap-2"
+                  disabled={orderMutation.isPending}
+                  className="inline-flex h-12 items-center gap-2 rounded-lg bg-[#71814B] px-6 font-['Inter'] text-sm font-semibold text-white hover:bg-[#56642B] disabled:opacity-60"
                 >
-                  {step === 2 ? (
-                    <>
-                      <span className="material-symbols-outlined text-[18px]">lock</span>
-                      Buyurtmani tasdiqlash
-                    </>
-                  ) : (
-                    <>
-                      Davom etish
-                      <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-                    </>
-                  )}
+                  {step === STEPS.length - 1
+                    ? (orderMutation.isPending ? 'Buyurtma yuborilmoqda…' : 'Buyurtmani tasdiqlash')
+                    : 'Davom etish'}
+                  {step === STEPS.length - 1 ? <LockKeyhole size={16} aria-hidden="true" /> : <ArrowRight size={16} aria-hidden="true" />}
                 </button>
               </div>
             </form>
-          </div>
+          </section>
 
-          {/* Order summary */}
-          <div>
-            <div className="bg-white rounded-xl p-6 shadow-[0_4px_12px_rgba(0,0,0,0.06)] sticky top-28">
-              <h2 className="font-['Playfair_Display'] text-[20px] font-semibold text-[#1A1A1A] mb-5">
-                Buyurtma
-              </h2>
-              <div className="flex flex-col gap-3 mb-5">
-                {[
-                  { name: "Zig'ir ko'ylak", size: 'M', price: '$120.00', qty: 1 },
-                  { name: 'Paxta futbolka', size: 'L', price: '$45.00', qty: 2 },
-                ].map((item) => (
-                  <div key={item.name} className="flex items-center justify-between gap-2">
-                    <div>
-                      <p className="font-['Inter'] text-[14px] font-semibold text-[#1A1A1A]">
-                        {item.name} × {item.qty}
-                      </p>
-                      <p className="font-['Inter'] text-[12px] text-[#6B6B6B]">O'lcham: {item.size}</p>
-                    </div>
-                    <span className="font-['Inter'] text-[14px] font-semibold text-[#1A1A1A]">
-                      {item.price}
-                    </span>
+          <aside className="h-fit rounded-xl bg-white p-6 shadow-card lg:sticky lg:top-28">
+            <h2 className="font-['Playfair_Display'] text-xl font-semibold text-[#1A1A1A]">Buyurtma</h2>
+            <ul className="mt-5 space-y-4">
+              {cart.items.map((item) => (
+                <li key={item._id} className="flex justify-between gap-3 border-b border-[#F0EDED] pb-4">
+                  <div>
+                    <p className="font-['Inter'] text-sm font-semibold text-[#1A1A1A]">
+                      {item.product?.name || 'Mahsulot'} × {item.quantity}
+                    </p>
+                    <p className="mt-1 font-['Inter'] text-xs text-[#6B6B6B]">{item.color?.name} · {item.size}</p>
                   </div>
-                ))}
-              </div>
-              <div className="border-t border-[#E5E5E5] pt-4 space-y-2 font-['Inter'] text-[14px]">
-                <div className="flex justify-between text-[#6B6B6B]">
-                  <span>Jami</span><span>$210.00</span>
-                </div>
-                <div className="flex justify-between text-[#6B6B6B]">
-                  <span>Yetkazib berish</span><span>$35.00</span>
-                </div>
-                <div className="flex justify-between font-bold text-[16px] text-[#1A1A1A] pt-1 border-t border-[#E5E5E5]">
-                  <span>Umumiy</span><span>$245.00</span>
-                </div>
-              </div>
-              <div className="mt-4 flex items-center gap-2 text-[#6B6B6B] font-['Inter'] text-[12px]">
-                <span className="material-symbols-outlined text-[14px]">shield</span>
-                256-bit SSL shifrlash
-              </div>
-            </div>
-          </div>
+                  <span className="whitespace-nowrap font-['Inter'] text-sm font-semibold text-[#1A1A1A]">
+                    {formatPrice((item.product?.price ?? item.priceSnapshot) * item.quantity)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <dl className="mt-5 space-y-3 font-['Inter'] text-sm">
+              <div className="flex justify-between gap-3 text-[#6B6B6B]"><dt>Mahsulotlar</dt><dd>{formatPrice(summary.subtotal)}</dd></div>
+              {summary.discount > 0 && <div className="flex justify-between gap-3 text-[#56642B]"><dt>Chegirma</dt><dd>−{formatPrice(summary.discount)}</dd></div>}
+              <div className="flex justify-between gap-3 text-[#6B6B6B]"><dt>Yetkazib berish</dt><dd>{summary.shipping ? formatPrice(summary.shipping) : 'Bepul'}</dd></div>
+              <div className="flex justify-between gap-3 text-[#6B6B6B]"><dt>Soliq</dt><dd>{formatPrice(summary.tax)}</dd></div>
+              <div className="flex justify-between gap-3 border-t border-[#E5E5E5] pt-4 text-base font-bold text-[#1A1A1A]"><dt>Jami</dt><dd>{formatPrice(summary.total)}</dd></div>
+            </dl>
+          </aside>
         </div>
-      </div>
+      </main>
     </>
   );
 }

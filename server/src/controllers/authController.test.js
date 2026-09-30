@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { createHash } from 'node:crypto';
 
 const findOne = jest.fn();
 const findById = jest.fn();
@@ -9,7 +10,7 @@ jest.unstable_mockModule('../models/User.js', () => ({
   User: { findOne, findById, create, updateOne },
 }));
 
-const { register, login, logout, refreshToken, getMe } = await import('./authController.js');
+const { register, login, logout, refreshToken, getMe, forgotPassword, resetPassword } = await import('./authController.js');
 const { User } = await import('../models/User.js');
 const { generateRefreshToken, hashRefreshToken } = await import('../utils/token.js');
 
@@ -118,6 +119,49 @@ describe('authentication and refresh sessions', () => {
       addresses: [],
       newsletterOptIn: false,
     });
+  });
+
+  test('forgot password returns 503 without looking up users or creating reset tokens', async () => {
+    await expect(invoke(forgotPassword, { body: { email: 'ada@example.com' } }))
+      .rejects.toMatchObject({
+        statusCode: 503,
+        message: 'Parolni tiklash xizmati hozircha mavjud emas',
+      });
+    expect(User.findOne).not.toHaveBeenCalled();
+    expect(User.create).not.toHaveBeenCalled();
+  });
+
+  test('reset password only finds a matching, unexpired token hash', async () => {
+    const token = 'cryptographically-generated-reset-token';
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const user = makeUser({
+      resetPasswordTokenHash: tokenHash,
+      resetPasswordExpires: new Date(Date.now() + 60_000),
+    });
+    const select = jest.fn().mockResolvedValue(user);
+    User.findOne.mockReturnValue({ select });
+
+    const result = await invoke(resetPassword, {
+      params: { token },
+      body: { password: 'newpass123' },
+    });
+
+    expect(User.findOne).toHaveBeenCalledWith({
+      resetPasswordTokenHash: tokenHash,
+      resetPasswordExpires: { $gt: expect.any(Number) },
+    });
+    expect(user.passwordHash).not.toBe('must-not-be-returned');
+    expect(user.resetPasswordTokenHash).toBeUndefined();
+    expect(user.resetPasswordExpires).toBeUndefined();
+    expect(user.save).toHaveBeenCalledTimes(2);
+    expect(result.statusCode).toBe(200);
+    expect(result.response.cookies.refreshToken).toBeDefined();
+
+    User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(null) });
+    await expect(invoke(resetPassword, {
+      params: { token: 'wrong-token' },
+      body: { password: 'newpass123' },
+    })).rejects.toMatchObject({ statusCode: 400 });
   });
 
   test('rotates refresh tokens and rejects reuse of the prior token', async () => {

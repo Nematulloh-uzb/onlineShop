@@ -1,309 +1,259 @@
+import { useQuery } from '@tanstack/react-query';
+import { ArrowRight, Check, Leaf, PackageCheck, Truck } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
+import WishlistToggle from '../components/UI/WishlistToggle.jsx';
+import { api, getApiErrorMessage } from '../lib/api.js';
 
-const HERO_IMAGE =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuDRuFZNBX3pzFy4kqRoTt2J30I4-Z65XpUDq5eHPvIni9CcxAeUkw03oM5gr315J3SBDrZ2xByfgpgLf8UcyAyHHqn9u0LjCMW-mtS6dxh_gLRxIAP4a8pe992YLQfbEP0_AhJaNlXu4VD4zj-3gffFr8jAAWYGlUu8fnqil80cq3z9spTJMmNux2KXazd-NtiLttULXT-Er9u4o7JXrX-DOyAP9VtUURZ-HBVRy0fCDIeDZrxGjQm12g';
-
-const CATEGORIES = [
-  {
-    title: 'Ayollar',
-    slug: 'ayollar',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAfT6HYO6v0s2eke3LcgLa9uxNs3xZ-kiw6lVxIjswMetWEf8-jhn2QY_j3SfiNjanbGfucYbrOPz7TycBw8KgZhcFWZn4YAMLoxkkviKSjxh0tcx5ksfVAgCiTMTP1pzuTbUfi3luDZYcH2kATBsvUNPT671vPyzVSGVmes2-oB87rMjjQyE7VqIEba-kunLWJ6WJsbfR2h3ci9H1cXslBVrJhqn6i8aPYcEh482Iye-vV1qyIQhA78w',
-  },
-  {
-    title: 'Erkaklar',
-    slug: 'erkaklar',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCa2pPcn_Euzszz2bTJFL9Ep7lGf4hpalct-0zLca2MYuVhst1-nxK61cojGDAOMhTj6tyRA6WjkfPec_NJURUfDIlWNoqlncK9g5zsDN75J73OrRJEi-Fu66UerMKneFYWONh0QvNpBzijZHxes7UmrpnZVue2fA_r8ecmaw_Zt23k3nVRjW8d7NaHidF5ou842qRdWix0HNWmaDRz6iJsDgltyhuiKZ6m6N2htY7_myF8-45sNWQMrw',
-  },
-  {
-    title: 'Aksessuarlar',
-    slug: 'aksessuarlar',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC4OdYJs9dJAmFCQCBBxUdzkGTxbKSpKBfIPgfkc2GjPxJF7wol1pZ5_5KM33fodISEQg7ncQb_KA6hGhTgvbxDHSeZNkxIM8pJFmukV4jF_fngnGgnLyrR7FS4G6Nsw6dWcNlnspdY8aAl_FNtngS5GaeDnRFgfBbx8xBM_RRkxiuQ9K3l7oZ2QT1zIxXnk1bLURR4kZQeruYMowkvoPCVRJvJrBegwbajs5Dh8tWQX3GYqrS4VLfrtw',
-  },
-];
-
-const PRODUCTS = [
-  { name: "Zig'ir ko'ylak", price: '$120.00', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCbZfRhZ8ljS3J5KLjchqPNfMObsBefdPxBvT9ITDFx7nIxczO63NxOvhsXNdY8lGY-553Ro2-MX18QjtHwaPSJAjDYvwj-ERsbhXTrrOiXPOG7tAtkJTWUSo0YlrN-_zbyhBfq1ZwsO4bjbtQv5E-i4ZFNuNkqEQYQvdZztgKCeNL_S5kMCLGtlwfYsbF5D4LQbdVYiUdbaezLBKZa9M54-uIW0gHkQHjnUgSm86zxX24HkN5voOkvnQ', slug: 'zigir-koylak' },
-  { name: 'Paxta futbolka', price: '$45.00', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDrtfuxAqNwPIXymAOOOAnEiIivPUZ619lTg3EpkRQayCdwP4MEeviQwU6H0Mb6Vp0USDIvtMQOf0PuMRzlv8UIjHg7zhz0GMrH-UmzjltqEX74DRdNFDYU4Jp49kb_B8ko9OIGez5Mjr22w98SfbGesJFAxyBJiKWXIGf5NCYnx5dxpvTeln3izXpfB3JX2ksLmHhvjrvOJQCrpVSX4yyTTWj6SFE5JqhzXmNOdgc-lUF2QMFnHADohg', slug: 'paxta-futbolka' },
-  { name: 'Jun palto', price: '$280.00', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAAeFl5pxoMuRsZj0MMy4ZH_LrKSePpCtMmj-a1PHRkXaW-Gavnh2SCudeWAR1-lrH8VWvodDne_SxD9KVM2XaLnCLR028K8OZiyga460QgYDFHHBAWNJuNF4ivfj378fO3l6_2eHLawqiCH5EyNtuUUtxBibL2zEsoD9ZFolkTCgRjkzWHqVSmsKCv_loJJgxDH6DC_HuFsW8bOVTtSMT_ZAY9CebS55Smp5kkSJWIAQ0KZIBu0SiY7w', slug: 'jun-palto' },
-  { name: 'Ipak bluzka', price: '$150.00', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBo1t5eThbUXz1wkp4sNn2efaAT3CDwzpv-DARk5tEJYjJkc3Q_j3DKZfCaVJlHGfg5XpqneMkIpslcsOmlrv_LjgrKo2RpQJQaktodbmwCanaR3XYPEb-NwI2D9vbeGeiaG15pF-pwsnqKA0lDIrwJrnqSPQziH83DLWKUkW4JP6ZQmCPn5KRXpFhR8Us_2bDQxYtWsSpUWHY44JNntMdSKyW1W8uKoFOmUD3PWeGCEPFuj5guuJ7bNQ', slug: 'ipak-bluzka' },
-];
-
-const TESTIMONIALS = [
-  { name: 'Dilnoza A.', location: 'Toshkent', initials: 'DA', text: '"Sifat juda yuqori. Zig\'ir ko\'ylak bir necha yuvishdan keyin ham o\'z shaklini saqlab qoldi. Albatta yana xarid qilaman!"' },
-  { name: 'Sardor M.', location: 'Samarqand', initials: 'SM', text: '"Yetkazib berish juda tez bo\'ldi. Qadoqlash ham ekologik toza edi. Bu brendga ishonch to\'liq!"' },
-  { name: 'Nilufar K.', location: 'Buxoro', initials: 'NK', text: '"Narxlar biroz qimmat, lekin sifat bunga arziydi. Har bir tiyin o\'zini oqlaydi."' },
-];
+const formatPrice = (price, currency = 'UZS') => new Intl.NumberFormat('uz-UZ', {
+  style: 'currency',
+  currency,
+  maximumFractionDigits: 0,
+}).format(price);
 
 export default function HomePage() {
+  const categoriesQuery = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data } = await api.get('/categories');
+      return data.data.categories;
+    },
+  });
+  const productsQuery = useQuery({
+    queryKey: ['products', 'home-featured'],
+    queryFn: async () => {
+      const { data } = await api.get('/products', { params: { limit: 4, featured: true, sort: 'mashhur' } });
+      return data.data.products;
+    },
+  });
+
+  const categories = (categoriesQuery.data || [])
+    .filter(({ slug }) => ['ayollar', 'erkaklar', 'aksessuarlar'].includes(slug))
+    .slice(0, 3);
+
   return (
     <>
       <Helmet>
-        <title>AURA — Barqaror Hashamatli Moda</title>
-        <meta name="description" content="Aura — Barqaror kelajak uchun ongli moda. Sof ekologik tozalik va nafis hashamat uyg'unligi." />
+        <title>AURA — Ongli tanlov, uzoq xizmat</title>
+        <meta
+          name="description"
+          content="Tabiiy materiallardan yaratilgan AURA kiyimlari. Kolleksiyani ko‘ring va o‘zingizga mos mahsulotni toping."
+        />
       </Helmet>
 
-      {/* HERO */}
-      <section className="relative w-full min-h-[850px] lg:h-screen -mt-20 flex items-center justify-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-100 hover:scale-105"
-          style={{ backgroundImage: `url('${HERO_IMAGE}')` }}
+      <section className="relative isolate flex min-h-[660px] items-center overflow-hidden bg-[#263326] lg:min-h-[760px]">
+        <img
+          src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=2200&auto=format&fit=crop&q=85"
+          alt=""
+          fetchPriority="high"
+          className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" />
-        <div className="relative z-10 max-w-[1280px] mx-auto px-6 md:px-10 pt-28 pb-16 flex flex-col items-center text-center">
-          <span className="font-['Inter'] text-[14px] font-semibold uppercase tracking-[0.15em] text-white drop-shadow-sm mb-4">
-            YANGI KOLLEKSIYA 2026
-          </span>
-          <h1 className="font-['Playfair_Display'] text-[40px] md:text-[64px] font-bold text-white max-w-[860px] leading-[1.1] mb-6 drop-shadow-md">
-            Zamonaviy davr uchun ongli moda
-          </h1>
-          <p className="font-['Inter'] text-[16px] md:text-[18px] text-white/90 max-w-[620px] leading-relaxed mb-10">
-            Tabiat bilan uyg'unlikda yaratilgan har bir kiyim. Sifatli materiallar, adolatli mehnat va barqaror kelajak uchun.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <Link
-              to="/katalog"
-              className="px-10 h-14 bg-[#8A9A5B] hover:bg-[#6E7A47] text-white font-['Inter'] text-[16px] font-semibold rounded-lg transition-all duration-300 shadow-md flex items-center justify-center gap-2"
-            >
-              Kolleksiyani ko'rish
-            </Link>
-            <a
-              href="#kategoriyalar"
-              className="px-10 h-14 bg-transparent border-2 border-white text-white font-['Inter'] text-[16px] font-semibold rounded-lg hover:bg-white hover:text-[#1A1A1A] transition-all duration-300 flex items-center justify-center"
-            >
-              Batafsil ma'lumot
-            </a>
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
+        <div className="mx-auto w-full max-w-[1280px] px-6 py-28 md:px-10">
+          <div className="max-w-2xl text-white">
+            <p className="mb-5 inline-flex items-center gap-2 font-['Inter'] text-xs font-semibold uppercase tracking-[0.2em] text-[#E2E8D1]">
+              <Leaf size={16} aria-hidden="true" />
+              Tabiiy materiallar · O‘ylangan dizayn
+            </p>
+            <h1 className="font-['Playfair_Display'] text-5xl font-medium leading-[1.08] md:text-7xl">
+              Kamroq, yaxshiroq va uzoqroq.
+            </h1>
+            <p className="mt-6 max-w-xl font-['Inter'] text-base leading-7 text-white/85 md:text-lg">
+              Kundalik hayot uchun qulay, puxta tanlangan materiallardan yaratilgan liboslar. O‘zingizga mos kolleksiyani kashf eting.
+            </p>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <Link
+                to="/katalog"
+                className="inline-flex h-14 items-center justify-center gap-2 rounded-lg bg-[#8A9A5B] px-7 font-['Inter'] text-sm font-semibold text-white transition-colors hover:bg-[#6E7A47]"
+              >
+                Kolleksiyani ko‘rish
+                <ArrowRight size={18} aria-hidden="true" />
+              </Link>
+              <a
+                href="#bizning-tamoyillar"
+                className="inline-flex h-14 items-center justify-center rounded-lg border border-white/60 px-7 font-['Inter'] text-sm font-semibold text-white transition-colors hover:bg-white/10"
+              >
+                Bizning yondashuv
+              </a>
+            </div>
           </div>
         </div>
         <a
           href="#kategoriyalar"
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 text-white/80 hover:text-white transition-colors animate-bounce flex flex-col items-center"
-          aria-label="Pastga"
+          aria-label="Kategoriyalarni ko‘rish"
+          className="absolute bottom-8 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1 font-['Inter'] text-xs font-medium text-white/80 transition-colors hover:text-white"
         >
-          <span className="material-symbols-outlined text-[32px]">keyboard_arrow_down</span>
+          Pastga aylantiring
+          <span className="material-symbols-outlined text-2xl">keyboard_arrow_down</span>
         </a>
       </section>
 
-      {/* CATEGORIES */}
-      <section id="kategoriyalar" className="w-full py-24 bg-[#F9F9F9]">
-        <div className="max-w-[1280px] mx-auto px-6 md:px-10">
-          <div className="text-center max-w-xl mx-auto mb-12">
-            <span className="font-['Inter'] text-[12px] font-semibold uppercase text-[#8A9A5B] tracking-widest block mb-2">
-              Tanlov imkoniyati
-            </span>
-            <h2 className="font-['Playfair_Display'] text-[32px] md:text-[40px] font-bold text-[#1A1A1A] leading-tight">
-              Kategoriyalar bo'yicha xarid qiling
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {CATEGORIES.map(({ title, slug, image }) => (
-              <Link
-                key={title}
-                to={`/katalog/${slug}`}
-                className="group relative aspect-[4/5] rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 block"
-              >
-                <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
-                  style={{ backgroundImage: `url('${image}')` }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent group-hover:from-black/85 transition-colors duration-500" />
-                <div className="absolute bottom-0 inset-x-0 p-6 flex flex-col items-start gap-1 text-white">
-                  <h3 className="font-['Playfair_Display'] text-[28px] font-semibold">{title}</h3>
-                  <span className="font-['Inter'] text-[14px] font-semibold flex items-center gap-1 text-[#D9EAA3] group-hover:translate-x-1.5 transition-transform duration-300">
-                    Xarid qilish{' '}
-                    <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* NEW ARRIVALS */}
-      <section className="w-full py-24 bg-[#F9F9F9]">
-        <div className="max-w-[1280px] mx-auto px-6 md:px-10">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between items-start gap-3 mb-12">
+      <section id="kategoriyalar" className="bg-white py-20 md:py-24">
+        <div className="mx-auto max-w-[1280px] px-6 md:px-10">
+          <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
-              <span className="font-['Inter'] text-[12px] font-semibold uppercase text-[#8A9A5B] tracking-widest block mb-2">
-                Eng so'nggi namunalar
-              </span>
-              <h2 className="font-['Playfair_Display'] text-[32px] md:text-[40px] font-bold text-[#1A1A1A] leading-tight">
-                Yangi kelganlar
+              <p className="mb-2 font-['Inter'] text-xs font-semibold uppercase tracking-[0.16em] text-[#71814B]">
+                O‘zingizga mosini toping
+              </p>
+              <h2 className="font-['Playfair_Display'] text-3xl font-semibold text-[#1A1A1A] md:text-4xl">
+                Kategoriyalar
               </h2>
             </div>
-            <Link
-              to="/katalog"
-              className="font-['Inter'] text-[16px] text-[#8A9A5B] hover:text-[#6E7A47] font-semibold flex items-center gap-1 group transition-colors"
-            >
-              Barchasini ko'rish{' '}
-              <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">
-                arrow_forward
-              </span>
+            <Link to="/katalog" className="inline-flex items-center gap-2 font-['Inter'] text-sm font-semibold text-[#56642B] hover:text-[#8A9A5B]">
+              Barcha mahsulotlar
+              <ArrowRight size={17} aria-hidden="true" />
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            {PRODUCTS.map(({ name, price, image, slug }) => (
-              <div
-                key={slug}
-                className="group bg-white rounded-xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300 flex flex-col"
-              >
-                <div className="relative aspect-[4/5] rounded-lg overflow-hidden bg-[#F0EDED] mb-3">
-                  <span className="absolute top-3 left-3 z-10 px-2.5 py-1 bg-[#8A9A5B] text-white font-['Inter'] text-[12px] font-semibold rounded-full tracking-wider">
-                    YANGI
-                  </span>
-                  <button
-                    aria-label="Istaklarga qo'shish"
-                    className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur text-[#6B6B6B] hover:text-red-500 transition-all flex items-center justify-center shadow-sm"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">favorite</span>
-                  </button>
-                  <div
-                    className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                    style={{ backgroundImage: `url('${image}')` }}
-                  />
-                  <Link
-                    to={`/mahsulot/${slug}`}
-                    className="absolute inset-x-3 bottom-3 h-12 bg-[#8A9A5B] hover:bg-[#6E7A47] text-white font-['Inter'] text-[14px] font-semibold rounded-lg shadow-lg flex items-center justify-center gap-2"
-                  >
-                    Batafsil ko'rish
-                  </Link>
-                </div>
-                <div className="px-1 pb-1 flex flex-col gap-1">
-                  <Link to={`/mahsulot/${slug}`}>
-                    <h4 className="font-['Inter'] text-[16px] font-semibold text-[#1A1A1A] hover:text-[#8A9A5B] transition-colors">
-                      {name}
-                    </h4>
-                  </Link>
-                  <span className="font-['Inter'] text-[16px] text-[#1A1A1A] font-semibold">{price}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+
+          {categoriesQuery.isError ? (
+            <p role="alert" className="rounded-xl bg-[#F9F9F9] p-6 font-['Inter'] text-sm text-[#6B6B6B]">
+              {getApiErrorMessage(categoriesQuery.error, 'Kategoriyalarni yuklab bo‘lmadi.')}
+            </p>
+          ) : categoriesQuery.isLoading ? (
+            <p className="rounded-xl bg-[#F9F9F9] p-6 font-['Inter'] text-sm text-[#6B6B6B]">Kategoriyalar yuklanmoqda…</p>
+          ) : categories.length ? (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {categories.map((category) => (
+                <Link
+                  key={category._id}
+                  to={`/katalog/${category.slug}`}
+                  className="group relative aspect-[4/3] overflow-hidden rounded-xl bg-[#EAE7E7]"
+                >
+                  {category.image && (
+                    <img
+                      src={category.image}
+                      alt=""
+                      loading="lazy"
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-6 text-white">
+                    <div>
+                      <h3 className="font-['Playfair_Display'] text-2xl font-semibold">{category.name}</h3>
+                      {category.description && (
+                        <p className="mt-1 max-w-xs font-['Inter'] text-xs text-white/80">{category.description}</p>
+                      )}
+                    </div>
+                    <ArrowRight className="shrink-0 transition-transform group-hover:translate-x-1" size={20} aria-hidden="true" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="rounded-xl bg-[#F9F9F9] p-6 font-['Inter'] text-sm text-[#6B6B6B]">
+              Hozircha katalog kategoriyalari mavjud emas.
+            </p>
+          )}
         </div>
       </section>
 
-      {/* BRAND STORY */}
-      <section id="bizning-hikoyamiz" className="w-full py-24 bg-[#F9F9F9] overflow-hidden">
-        <div className="max-w-[1280px] mx-auto px-6 md:px-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-0 items-center">
-            <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden shadow-lg">
-              <div
-                className="w-full h-full bg-cover bg-center"
-                style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuC4DfKKN3v6T22d4ir8Rr95rLf_e0garYIV2sATmzDoYrm37PTxfroYiuyKUuZEwO9wdo5gZ5dVofoZrxXOhNZ-aJ7S358mxFHy9GQcu5nx3GFa1wvknB9_0pV4YFaaIWdzRX9r3SbOueLu6rUFPAcKcOAkafUDqqAQbM0-xC7I8THatOOoljyxj24zZu83oF598-DF93KQ2lPRiBSchN8kt9wG74YwpBK8hHhGELkVSD89Vdet0JYZ1g')" }}
-              />
-            </div>
-            <div className="flex flex-col lg:pl-20 items-start">
-              <span className="font-['Inter'] text-[12px] uppercase tracking-[0.15em] text-[#8A9A5B] mb-3 font-semibold">
-                BIZNING HIKOYAMIZ
-              </span>
-              <h2 className="font-['Playfair_Display'] text-[32px] md:text-[40px] font-bold text-[#1A1A1A] mb-4 leading-tight">
-                Maqsad bilan yaratilgan
-              </h2>
-              <p className="font-['Inter'] text-[16px] text-[#6B6B6B] leading-relaxed mb-6 max-w-xl">
-                2018-yildan beri biz barqaror moda harakatining bir qismimiz. Har bir kiyim tabiiy materiallardan, adolatli mehnat sharoitida va atrof-muhitga zarar yetkazmasdan yaratiladi.
+      <section className="bg-[#F7F7F3] py-20 md:py-24">
+        <div className="mx-auto max-w-[1280px] px-6 md:px-10">
+          <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+            <div>
+              <p className="mb-2 font-['Inter'] text-xs font-semibold uppercase tracking-[0.16em] text-[#71814B]">
+                Ko‘p tanlangan
               </p>
-              <div className="bg-white rounded-xl p-4 mb-6 w-full max-w-md flex items-center gap-4 shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
-                <div className="w-12 h-12 rounded-full bg-[#8A9A5B]/15 flex items-center justify-center text-[#8A9A5B] shrink-0">
-                  <span className="material-symbols-outlined text-[24px]">eco</span>
-                </div>
-                <div>
-                  <p className="font-['Inter'] text-[16px] text-[#1A1A1A] font-semibold">
-                    100% Organik & Qayta ishlanuvchi
-                  </p>
-                  <p className="font-['Inter'] text-[14px] text-[#6B6B6B]">
-                    Har bir xarid orqali tabiatga karbon izini kamaytirasiz.
-                  </p>
-                </div>
-              </div>
-              <Link
-                to="/katalog"
-                className="font-['Inter'] text-[16px] font-semibold text-[#8A9A5B] hover:text-[#6E7A47] flex items-center gap-2 group transition-colors"
-              >
-                Bizning tariximizni o'qing{' '}
-                <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1.5 transition-transform">
-                  arrow_forward
-                </span>
-              </Link>
+              <h2 className="font-['Playfair_Display'] text-3xl font-semibold text-[#1A1A1A] md:text-4xl">
+                Kolleksiyadan tanlov
+              </h2>
             </div>
+            <Link to="/katalog" className="inline-flex items-center gap-2 font-['Inter'] text-sm font-semibold text-[#56642B] hover:text-[#8A9A5B]">
+              Katalogga o‘tish
+              <ArrowRight size={17} aria-hidden="true" />
+            </Link>
           </div>
+
+          {productsQuery.isError ? (
+            <p role="alert" className="rounded-xl bg-white p-6 font-['Inter'] text-sm text-[#6B6B6B]">
+              {getApiErrorMessage(productsQuery.error, 'Mahsulotlarni yuklab bo‘lmadi.')}
+            </p>
+          ) : productsQuery.isLoading ? (
+            <p className="rounded-xl bg-white p-6 font-['Inter'] text-sm text-[#6B6B6B]">Mahsulotlar yuklanmoqda…</p>
+          ) : productsQuery.data?.length ? (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {productsQuery.data.map((product) => {
+                const image = product.images?.[0];
+                return (
+                  <article key={product._id} className="group overflow-hidden rounded-xl bg-white p-3 shadow-card">
+                        <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-[#F0EDED]">
+                          <Link
+                            to={`/mahsulot/${product.slug}`}
+                            aria-label={`${product.name} mahsulotini ko‘rish`}
+                            className="block h-full"
+                          >
+                            {image?.url && (
+                              <img
+                                src={image.url}
+                                alt={image.alt || product.name}
+                                loading="lazy"
+                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                              />
+                            )}
+                          </Link>
+                          <WishlistToggle
+                            productId={product._id}
+                            className="absolute right-3 top-3 z-10 h-10 w-10 rounded-full bg-white/95 text-[#56642B] shadow-sm hover:text-red-600"
+                          />
+                        </div>
+                        <div className="px-1 pb-2 pt-4">
+                      <p className="mb-1 font-['Inter'] text-[11px] font-semibold uppercase tracking-wider text-[#71814B]">
+                        {product.ecoBadge}
+                      </p>
+                      <h3 className="font-['Inter'] text-sm font-semibold text-[#1A1A1A]">
+                        <Link to={`/mahsulot/${product.slug}`} className="hover:text-[#56642B]">{product.name}</Link>
+                      </h3>
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="font-['Inter'] text-base font-bold text-[#1A1A1A]">
+                          {formatPrice(product.price, product.currency)}
+                        </span>
+                        {product.compareAtPrice > product.price && (
+                          <span className="font-['Inter'] text-xs text-[#6B6B6B] line-through">
+                            {formatPrice(product.compareAtPrice, product.currency)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="rounded-xl bg-white p-6 font-['Inter'] text-sm text-[#6B6B6B]">
+              Hozircha tanlangan mahsulotlar yo‘q. Katalogni ko‘rib chiqing.
+            </p>
+          )}
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
-      <section className="w-full py-24 bg-[#F9F9F9]">
-        <div className="max-w-[1280px] mx-auto px-6 md:px-10">
-          <div className="text-center max-w-xl mx-auto mb-12">
-            <span className="font-['Inter'] text-[12px] font-semibold uppercase text-[#8A9A5B] tracking-widest block mb-2">
-              Haqiqiy fikrlar
-            </span>
-            <h2 className="font-['Playfair_Display'] text-[32px] md:text-[40px] font-bold text-[#1A1A1A]">
-              Mijozlarimiz nima deydi
+      <section id="bizning-tamoyillar" className="bg-white py-20 md:py-24">
+        <div className="mx-auto max-w-[1280px] px-6 md:px-10">
+          <div className="mx-auto mb-12 max-w-2xl text-center">
+            <p className="mb-2 font-['Inter'] text-xs font-semibold uppercase tracking-[0.16em] text-[#71814B]">
+              Tanlov ortidagi qadriyatlar
+            </p>
+            <h2 className="font-['Playfair_Display'] text-3xl font-semibold text-[#1A1A1A] md:text-4xl">
+              Har bir detal o‘ylab tanlanadi
             </h2>
+            <p className="mt-4 font-['Inter'] text-sm leading-relaxed text-[#6B6B6B]">
+              Material, kelib chiqish va parvarish haqidagi ma’lumotlarni mahsulot sahifasida ochiq ko‘rsatamiz.
+            </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {TESTIMONIALS.map(({ name, location, initials, text }) => (
-              <div
-                key={name}
-                className="relative bg-white rounded-xl p-8 shadow-[0_4px_12px_rgba(0,0,0,0.06)] overflow-hidden"
-              >
-                <span className="absolute -right-2 -bottom-6 select-none text-[120px] leading-none font-serif text-[#8A9A5B] opacity-[0.08]">
-                  "
-                </span>
-                <div className="relative z-10 flex flex-col gap-3 mb-4">
-                  <div className="flex items-center gap-1 text-[#8A9A5B]">
-                    {[...Array(5)].map((_, i) => (
-                      <span key={i} className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                        star
-                      </span>
-                    ))}
-                  </div>
-                  <p className="font-['Inter'] text-[16px] text-[#6B6B6B] leading-relaxed italic">{text}</p>
-                </div>
-                <div className="relative z-10 flex items-center gap-3 pt-2">
-                  <div className="w-10 h-10 rounded-full bg-[#8A9A5B]/20 flex items-center justify-center text-[#56642B] font-['Inter'] text-[14px] font-bold">
-                    {initials}
-                  </div>
-                  <div>
-                    <p className="font-['Inter'] text-[16px] text-[#1A1A1A] font-semibold">{name}</p>
-                    <p className="font-['Inter'] text-[14px] text-[#6B6B6B]">{location}</p>
-                  </div>
-                </div>
-              </div>
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { icon: Leaf, title: 'Material haqida ochiqlik', text: 'Tarkib va material tafsilotlarini mahsulot sahifasida ko‘ring.' },
+              { icon: Check, title: 'Tanlab olingan sifat', text: 'Har bir mahsulot o‘ziga xos tavsif va parvarish yo‘riqnomasi bilan.' },
+              { icon: PackageCheck, title: 'Aniq buyurtma holati', text: 'Kirishdan so‘ng buyurtmalaringizni shaxsiy kabinetingizda kuzating.' },
+              { icon: Truck, title: 'Yetkazib berish', text: 'Yetkazib berish narxi va shartlari buyurtmani tasdiqlashdan oldin ko‘rsatiladi.' },
+            ].map(({ icon: Icon, title, text }) => (
+              <article key={title} className="border-t border-[#E5E5E5] pt-5">
+                <Icon size={23} strokeWidth={1.6} className="mb-4 text-[#71814B]" aria-hidden="true" />
+                <h3 className="font-['Inter'] text-sm font-semibold text-[#1A1A1A]">{title}</h3>
+                <p className="mt-2 font-['Inter'] text-sm leading-relaxed text-[#6B6B6B]">{text}</p>
+              </article>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* NEWSLETTER */}
-      <section className="w-full py-24 bg-[#F0F2E8]">
-        <div className="max-w-[1280px] mx-auto px-6 md:px-10 flex flex-col items-center text-center">
-          <span className="w-12 h-12 rounded-full bg-[#8A9A5B]/15 flex items-center justify-center text-[#8A9A5B] mb-4">
-            <span className="material-symbols-outlined text-[24px]">mail</span>
-          </span>
-          <h2 className="font-['Playfair_Display'] text-[32px] md:text-[40px] font-bold text-[#1A1A1A] mb-2 leading-tight">
-            Aura hamjamiyatiga qo'shiling
-          </h2>
-          <p className="font-['Inter'] text-[16px] text-[#6B6B6B] max-w-lg mb-8 leading-relaxed">
-            Yangi kolleksiyalar, chegirmalar va ekologik moda yangiliklari haqida birinchilardan bo'lib xabar toping.
-          </p>
-          <form className="w-full max-w-md flex flex-col sm:flex-row gap-2 items-center" onSubmit={(e) => e.preventDefault()}>
-            <input
-              type="email"
-              placeholder="Elektron pochtangizni kiriting"
-              required
-              className="w-full h-12 px-4 rounded-lg bg-white text-[#1A1A1A] placeholder:text-[#6B6B6B] focus:outline-none focus:ring-2 focus:ring-[#8A9A5B] font-['Inter'] text-[14px] border border-[#E5E2E1]"
-            />
-            <button
-              type="submit"
-              className="w-full sm:w-auto shrink-0 h-12 px-8 bg-[#8A9A5B] hover:bg-[#6E7A47] text-white font-['Inter'] text-[16px] font-semibold rounded-lg transition-all shadow-md"
-            >
-              Obuna bo'lish
-            </button>
-          </form>
-          <p className="font-['Inter'] text-[12px] text-[#6B6B6B] mt-3">
-            Spam yo'q. Istalgan vaqt obunani bekor qilishingiz mumkin.
-          </p>
         </div>
       </section>
     </>

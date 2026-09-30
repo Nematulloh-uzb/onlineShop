@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import { createHash } from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 import { ApiError } from '../utils/ApiError.js';
@@ -170,46 +171,32 @@ export const getMe = catchAsync(async (req, res) => {
   });
 });
 
-// 6. Parolni unutdim (Mock / email konsolga)
+// 6. Parolni unutdim
 export const forgotPassword = catchAsync(async (req, res, next) => {
-  const { email } = req.body;
-  if (!email) {
+  const { email } = req.body || {};
+  if (typeof email !== 'string' || !email.trim()) {
     return next(new ApiError(400, 'Elektron pochta manzilini kiriting'));
   }
 
-  const user = await User.findOne({ email: email.toLowerCase() });
-  if (!user) {
-    // Xavfsizlik nuqtai nazaridan xuddi xat ketgandek javob beriladi
-    return res.status(200).json({
-      success: true,
-      message: 'Agar ushbu pochta ro‘yxatdan o‘tgan bo‘lsa, tiklash havolasi yuborildi',
-    });
-  }
-
-  const resetToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-  user.resetPasswordTokenHash = await bcrypt.hash(resetToken, 10);
-  user.resetPasswordExpires = new Date(Date.now() + 30 * 60 * 1000); // 30 daqiqa
-  await user.save({ validateBeforeSave: false });
-
-  console.log(`[Email Mock] Parolni tiklash havolasi (${user.email}): /reset-password/${resetToken}`);
-
-  res.status(200).json({
-    success: true,
-    message: 'Parolni tiklash havolasi pochtangizga yuborildi (konsolda ko‘rsatildi)',
-    mockToken: env.NODE_ENV === 'development' ? resetToken : undefined,
-  });
+  return next(new ApiError(503, 'Parolni tiklash xizmati hozircha mavjud emas'));
 });
 
 // 7. Parolni tiklash
 export const resetPassword = catchAsync(async (req, res, next) => {
-  const { token } = req.params;
-  const { password } = req.body;
+  const { token } = req.params || {};
+  const { password } = req.body || {};
 
-  if (!password || password.length < 8) {
+  if (typeof password !== 'string' || password.length < 8) {
     return next(new ApiError(400, 'Yangi parol kamida 8 ta belgidan iborat bo‘lishi shart'));
   }
 
+  if (typeof token !== 'string' || !token) {
+    return next(new ApiError(400, 'Havola yaroqsiz yoki uning muddati o‘tgan'));
+  }
+
+  const resetPasswordTokenHash = createHash('sha256').update(token).digest('hex');
   const user = await User.findOne({
+    resetPasswordTokenHash,
     resetPasswordExpires: { $gt: Date.now() },
   }).select('+passwordHash +resetPasswordTokenHash +resetPasswordExpires');
 

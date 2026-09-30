@@ -1,80 +1,114 @@
+import { useQuery } from '@tanstack/react-query';
+import { Heart, ShoppingBag } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
+import { api, getApiErrorMessage } from '../lib/api.js';
+import WishlistToggle from '../components/UI/WishlistToggle.jsx';
 
-const WISHLIST = [
-  { name: "Zig'ir ko'ylak", price: '$120.00', slug: 'zigir-koylak', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCbZfRhZ8ljS3J5KLjchqPNfMObsBefdPxBvT9ITDFx7nIxczO63NxOvhsXNdY8lGY-553Ro2-MX18QjtHwaPSJAjDYvwj-ERsbhXTrrOiXPOG7tAtkJTWUSo0YlrN-_zbyhBfq1ZwsO4bjbtQv5E-i4ZFNuNkqEQYQvdZztgKCeNL_S5kMCLGtlwfYsbF5D4LQbdVYiUdbaezLBKZa9M54-uIW0gHkQHjnUgSm86zxX24HkN5voOkvnQ' },
-  { name: 'Jun palto', price: '$280.00', slug: 'jun-palto', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAAeFl5pxoMuRsZj0MMy4ZH_LrKSePpCtMmj-a1PHRkXaW-Gavnh2SCudeWAR1-lrH8VWvodDne_SxD9KVM2XaLnCLR028K8OZiyga460QgYDFHHBAWNJuNF4ivfj378fO3l6_2eHLawqiCH5EyNtuUUtxBibL2zEsoD9ZFolkTCgRjkzWHqVSmsKCv_loJJgxDH6DC_HuFsW8bOVTtSMT_ZAY9CebS55Smp5kkSJWIAQ0KZIBu0SiY7w' },
-];
+const formatPrice = (price, currency = 'UZS') => new Intl.NumberFormat('uz-UZ', {
+  style: 'currency',
+  currency,
+  maximumFractionDigits: 0,
+}).format(price);
 
 export default function WishlistPage() {
+  const wishlistQuery = useQuery({
+    queryKey: ['wishlist'],
+    queryFn: async () => {
+      const { data } = await api.get('/wishlist');
+      return data.data.wishlist;
+    },
+  });
+
   return (
     <>
       <Helmet>
-        <title>Istaklar ro'yxati — AURA</title>
+        <title>Istaklar ro‘yxati — AURA</title>
       </Helmet>
 
-      <div className="max-w-[1280px] mx-auto px-6 md:px-10 py-10">
-        <h1 className="font-['Playfair_Display'] text-[36px] font-bold text-[#1A1A1A] mb-8">
-          Istaklar ro'yxati
-        </h1>
+      <main className="mx-auto max-w-[1280px] px-6 py-10 md:px-10">
+        <div className="mb-8 flex items-center gap-3">
+          <Heart size={24} className="text-[#71814B]" aria-hidden="true" />
+          <h1 className="font-['Playfair_Display'] text-3xl font-bold text-[#1A1A1A] md:text-4xl">
+            Istaklar ro‘yxati
+          </h1>
+        </div>
 
-        {WISHLIST.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <span className="material-symbols-outlined text-[64px] text-[#E5E5E5] mb-4">favorite</span>
-            <h2 className="font-['Playfair_Display'] text-[24px] font-semibold text-[#1A1A1A] mb-2">
-              Istaklar ro'yxatingiz bo'sh
+        {wishlistQuery.isLoading ? (
+          <p className="rounded-xl bg-white p-10 text-center font-['Inter'] text-sm text-[#6B6B6B]">
+            Saqlangan mahsulotlar yuklanmoqda…
+          </p>
+        ) : wishlistQuery.isError ? (
+          <div role="alert" className="rounded-xl bg-white px-6 py-12 text-center">
+            <p className="font-['Inter'] text-sm text-red-700">
+              {getApiErrorMessage(wishlistQuery.error, 'Istaklar ro‘yxatini yuklab bo‘lmadi.')}
+            </p>
+            <button
+              type="button"
+              onClick={() => wishlistQuery.refetch()}
+              className="mt-5 rounded-lg bg-[#8A9A5B] px-5 py-3 font-['Inter'] text-sm font-semibold text-white"
+            >
+              Qayta yuklash
+            </button>
+          </div>
+        ) : wishlistQuery.data.length === 0 ? (
+          <div className="rounded-xl bg-white px-6 py-16 text-center shadow-card">
+            <Heart size={36} className="mx-auto mb-4 text-[#C6C8B8]" aria-hidden="true" />
+            <h2 className="font-['Playfair_Display'] text-2xl font-semibold text-[#1A1A1A]">
+              Saqlangan mahsulot yo‘q
             </h2>
-            <p className="font-['Inter'] text-[15px] text-[#6B6B6B] mb-6">
-              Yoqtiрgan mahsulotlarni yurak belgisini bosib saqlang
+            <p className="mx-auto mt-2 max-w-md font-['Inter'] text-sm leading-relaxed text-[#6B6B6B]">
+              Katalogda yurak belgisini bosib, keyin ko‘rmoqchi bo‘lgan mahsulotlaringizni shu yerda saqlang.
             </p>
             <Link
               to="/katalog"
-              className="px-8 h-12 bg-[#8A9A5B] hover:bg-[#6E7A47] text-white font-['Inter'] text-[15px] font-semibold rounded-lg transition-colors flex items-center gap-2"
+              className="mt-6 inline-flex h-12 items-center gap-2 rounded-lg bg-[#71814B] px-5 font-['Inter'] text-sm font-semibold text-white hover:bg-[#56642B]"
             >
-              Mahsulotlarni ko'rish
+              <ShoppingBag size={17} aria-hidden="true" />
+              Katalogni ko‘rish
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {WISHLIST.map(({ name, price, slug, image }) => (
-              <div
-                key={slug}
-                className="group bg-white rounded-xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300"
-              >
-                <div className="relative aspect-[4/5] rounded-lg overflow-hidden bg-[#F0EDED] mb-3">
-                  <div
-                    className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                    style={{ backgroundImage: `url('${image}')` }}
-                  />
-                  <button
-                    aria-label="Istakdan olib tashlash"
-                    className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 text-red-500 flex items-center justify-center shadow-sm"
-                  >
-                    <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      favorite
-                    </span>
-                  </button>
-                  <Link
-                    to={`/mahsulot/${slug}`}
-                    className="absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 transition-all duration-300 h-12 bg-[#8A9A5B] hover:bg-[#6E7A47] text-white font-['Inter'] text-[14px] font-semibold rounded-lg flex items-center justify-center gap-2"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">shopping_bag</span>
-                    Savatga qo'shish
-                  </Link>
-                </div>
-                <div className="px-1">
-                  <Link to={`/mahsulot/${slug}`}>
-                    <h4 className="font-['Inter'] text-[16px] font-semibold text-[#1A1A1A] hover:text-[#8A9A5B] transition-colors mb-1">
-                      {name}
-                    </h4>
-                  </Link>
-                  <span className="font-['Inter'] text-[16px] font-semibold text-[#1A1A1A]">{price}</span>
-                </div>
-              </div>
-            ))}
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {wishlistQuery.data.map((product) => {
+              const image = product.images?.[0];
+              return (
+                <article key={product._id} className="group overflow-hidden rounded-xl bg-white p-3 shadow-card">
+                  <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-[#F0EDED]">
+                    <Link to={`/mahsulot/${product.slug}`} className="block h-full">
+                      {image?.url && (
+                        <img
+                          src={image.url}
+                          alt={image.alt || product.name}
+                          loading="lazy"
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      )}
+                    </Link>
+                    <WishlistToggle
+                      productId={product._id}
+                      className="absolute right-3 top-3 z-10 h-10 w-10 rounded-full bg-white/95 text-red-600 shadow-sm"
+                    />
+                  </div>
+                  <div className="px-1 pb-2 pt-4">
+                    <p className="mb-1 font-['Inter'] text-[11px] font-semibold uppercase tracking-wider text-[#71814B]">
+                      {product.category?.name || product.ecoBadge}
+                    </p>
+                    <Link to={`/mahsulot/${product.slug}`}>
+                      <h2 className="font-['Inter'] text-sm font-semibold text-[#1A1A1A] hover:text-[#56642B]">
+                        {product.name}
+                      </h2>
+                    </Link>
+                    <p className="mt-2 font-['Inter'] text-base font-bold text-[#1A1A1A]">
+                      {formatPrice(product.price, product.currency)}
+                    </p>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
-      </div>
+      </main>
     </>
   );
 }
