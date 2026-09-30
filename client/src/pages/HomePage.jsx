@@ -164,7 +164,7 @@ export default function HomePage() {
                   />
                   <Link
                     to={`/mahsulot/${slug}`}
-                    className="absolute inset-x-3 bottom-3 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 h-12 bg-[#8A9A5B] hover:bg-[#6E7A47] text-white font-['Inter'] text-[14px] font-semibold rounded-lg shadow-lg flex items-center justify-center gap-2"
+                    className="absolute inset-x-3 bottom-3 h-12 bg-[#8A9A5B] hover:bg-[#6E7A47] text-white font-['Inter'] text-[14px] font-semibold rounded-lg shadow-lg flex items-center justify-center gap-2"
                   >
                     Batafsil ko'rish
                   </Link>
