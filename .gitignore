@@ -7,4 +7,5 @@ coverage
 *.log
 uploads/*
 !uploads/.gitkeep
+server/data/
 .DS_Store

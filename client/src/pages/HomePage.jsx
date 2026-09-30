@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Check, Leaf, PackageCheck, Truck } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
+import ImageWithFallback from '../components/UI/ImageWithFallback.jsx';
 import WishlistToggle from '../components/UI/WishlistToggle.jsx';
 import { api, getApiErrorMessage } from '../lib/api.js';
 
@@ -42,11 +43,13 @@ export default function HomePage() {
       </Helmet>
 
       <section className="relative isolate flex min-h-[660px] items-center overflow-hidden bg-[#263326] lg:min-h-[760px]">
-        <img
+        <ImageWithFallback
           src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=2200&auto=format&fit=crop&q=85"
           alt=""
           fetchPriority="high"
           className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
+          fallbackClassName="bg-[#263326] text-white/30"
+          loading="eager"
         />
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/75 via-black/45 to-black/10" />
         <div className="mx-auto w-full max-w-[1280px] px-6 py-28 md:px-10">
@@ -55,7 +58,7 @@ export default function HomePage() {
               <Leaf size={16} aria-hidden="true" />
               Tabiiy materiallar · O‘ylangan dizayn
             </p>
-            <h1 className="font-['Playfair_Display'] text-5xl font-medium leading-[1.08] md:text-7xl">
+            <h1 className="font-['Playfair_Display'] text-5xl font-medium leading-[1.08] text-white md:text-7xl">
               Kamroq, yaxshiroq va uzoqroq.
             </h1>
             <p className="mt-6 max-w-xl font-['Inter'] text-base leading-7 text-white/85 md:text-lg">
@@ -119,14 +122,11 @@ export default function HomePage() {
                   to={`/katalog/${category.slug}`}
                   className="group relative aspect-[4/3] overflow-hidden rounded-xl bg-[#EAE7E7]"
                 >
-                  {category.image && (
-                    <img
-                      src={category.image}
-                      alt=""
-                      loading="lazy"
-                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                  )}
+                  <ImageWithFallback
+                    src={category.image}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-6 text-white">
                     <div>
@@ -183,14 +183,11 @@ export default function HomePage() {
                         aria-label={`${product.name} mahsulotini ko‘rish`}
                         className="block h-full"
                       >
-                        {image?.url && (
-                          <img
-                            src={image.url}
-                            alt={image.alt || product.name}
-                            loading="lazy"
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          />
-                        )}
+                        <ImageWithFallback
+                          src={image?.url}
+                          alt={image?.alt || product.name}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
                       </Link>
                       <WishlistToggle
                         productId={product._id}

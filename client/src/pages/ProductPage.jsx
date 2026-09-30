@@ -5,6 +5,7 @@ import { Helmet } from 'react-helmet-async';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api, getApiErrorMessage } from '../lib/api.js';
+import ImageWithFallback from '../components/UI/ImageWithFallback.jsx';
 import WishlistToggle from '../components/UI/WishlistToggle.jsx';
 
 const formatPrice = (price, currency = 'UZS') => new Intl.NumberFormat('uz-UZ', {
@@ -170,13 +171,12 @@ export default function ProductPage() {
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
           <section aria-label="Mahsulot rasmlari">
             <div className="aspect-[4/5] overflow-hidden rounded-xl bg-[#F0EDED]">
-              {image?.url && (
-                <img
-                  src={image.url}
-                  alt={image.alt || product.name}
-                  className="h-full w-full object-cover"
-                />
-              )}
+              <ImageWithFallback
+                key={image?.url || product._id}
+                src={image?.url}
+                alt={image?.alt || product.name}
+                className="h-full w-full object-cover"
+              />
             </div>
             {images.length > 1 && (
               <div className="mt-3 flex gap-3 overflow-x-auto">
@@ -191,7 +191,12 @@ export default function ProductPage() {
                       activeImage === index ? 'border-[#71814B]' : 'border-transparent'
                     }`}
                   >
-                    <img src={item.url} alt="" loading="lazy" className="h-full w-full object-cover" />
+                    <ImageWithFallback
+                      key={item.url}
+                      src={item.url}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
                   </button>
                 ))}
               </div>

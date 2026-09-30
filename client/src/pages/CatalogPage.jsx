@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import ImageWithFallback from '../components/UI/ImageWithFallback.jsx';
 import WishlistToggle from '../components/UI/WishlistToggle.jsx';
 import { api, getApiErrorMessage } from '../lib/api.js';
 
@@ -189,18 +190,11 @@ export default function CatalogPage() {
                         aria-label={`${product.name} mahsulotini ko‘rish`}
                         className="relative block aspect-[4/5] overflow-hidden rounded-lg bg-[#F0EDED]"
                       >
-                        {image?.url ? (
-                          <img
-                            src={image.url}
-                            alt={image.alt || product.name}
-                            loading="lazy"
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="flex h-full items-center justify-center text-[#8A9A5B]">
-                            <span className="material-symbols-outlined text-5xl">image</span>
-                          </div>
-                        )}
+                        <ImageWithFallback
+                          src={image?.url}
+                          alt={image?.alt || product.name}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
                         {product.discountPercent > 0 && (
                           <span className="absolute left-3 top-3 rounded-full bg-[#8A9A5B] px-3 py-1 font-['Inter'] text-xs font-semibold text-white">
                             −{product.discountPercent}%

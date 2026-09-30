@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Minus, Plus, ShieldCheck, ShoppingBag, Trash2 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
+import ImageWithFallback from '../components/UI/ImageWithFallback.jsx';
 import { api, getApiErrorMessage } from '../lib/api.js';
 
 const formatPrice = (price, currency = 'UZS') => new Intl.NumberFormat('uz-UZ', {
@@ -135,9 +136,11 @@ export default function CartPage() {
                       aria-label={`${product?.name || 'Mahsulot'} tafsilotlari`}
                       className="h-28 w-24 shrink-0 overflow-hidden rounded-lg bg-[#F0EDED] sm:h-36 sm:w-28"
                     >
-                      {image?.url && (
-                        <img src={image.url} alt={image.alt || product.name} className="h-full w-full object-cover" />
-                      )}
+                      <ImageWithFallback
+                        src={image?.url}
+                        alt={image?.alt || product?.name || ''}
+                        className="h-full w-full object-cover"
+                      />
                     </Link>
                     <div className="flex min-w-0 flex-1 flex-col justify-between gap-4">
                       <div>

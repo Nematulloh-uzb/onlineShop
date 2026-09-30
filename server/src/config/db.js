@@ -1,7 +1,11 @@
+import { mkdir } from 'node:fs/promises';
 import mongoose from 'mongoose';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { env } from './env.js';
 
 let embeddedMongo = null;
+const embeddedMongoPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../data/mongodb');
 
 export const connectDB = async () => {
   try {
@@ -15,13 +19,15 @@ export const connectDB = async () => {
       console.log('[MongoDB] Lokal MongoDB serveri aniqlanmadi. Avtomatik Embedded MongoDB ishga tushirilmoqda...');
       try {
         const { MongoMemoryServer } = await import('mongodb-memory-server');
+        await mkdir(embeddedMongoPath, { recursive: true });
         embeddedMongo = await MongoMemoryServer.create({
           instance: {
             port: 27017,
             dbName: 'aura_db',
+            dbPath: embeddedMongoPath,
           },
         });
-        const uri = embeddedMongo.getUri() + 'aura_db';
+        const uri = embeddedMongo.getUri('aura_db');
         const conn = await mongoose.connect(uri);
         console.log(`[MongoDB] Embedded MongoDB muvaffaqiyatli ishga tushdi va ulandi: ${uri}`);
         return conn;

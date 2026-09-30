@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Heart, ShoppingBag } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
+import ImageWithFallback from '../components/UI/ImageWithFallback.jsx';
 import { api, getApiErrorMessage } from '../lib/api.js';
 import WishlistToggle from '../components/UI/WishlistToggle.jsx';
 
@@ -76,14 +77,11 @@ export default function WishlistPage() {
                 <article key={product._id} className="group overflow-hidden rounded-xl bg-white p-3 shadow-card">
                   <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-[#F0EDED]">
                     <Link to={`/mahsulot/${product.slug}`} className="block h-full">
-                      {image?.url && (
-                        <img
-                          src={image.url}
-                          alt={image.alt || product.name}
-                          loading="lazy"
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      )}
+                      <ImageWithFallback
+                        src={image?.url}
+                        alt={image?.alt || product.name}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
                     </Link>
                     <WishlistToggle
                       productId={product._id}
