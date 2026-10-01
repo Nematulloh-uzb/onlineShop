@@ -148,7 +148,7 @@ export default function ProfilePage() {
   return (
     <>
       <Helmet>
-        <title>Mening profilim — AURA</title>
+        <title>Mening profilim — VERDE</title>
       </Helmet>
 
       <div className="mx-auto max-w-[1280px] px-6 py-10 md:px-10">

@@ -141,7 +141,7 @@ export default function CheckoutPage() {
   return (
     <>
       <Helmet>
-        <title>Buyurtmani rasmiylashtirish — AURA</title>
+        <title>Buyurtmani rasmiylashtirish — VERDE</title>
       </Helmet>
 
       <main className="mx-auto max-w-[1280px] px-6 py-10 md:px-10">

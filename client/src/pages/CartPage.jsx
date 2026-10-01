@@ -72,7 +72,7 @@ export default function CartPage() {
   return (
     <>
       <Helmet>
-        <title>Savat — AURA</title>
+        <title>Savat — VERDE</title>
       </Helmet>
 
       <main className="mx-auto max-w-[1280px] px-6 py-10 md:px-10">
