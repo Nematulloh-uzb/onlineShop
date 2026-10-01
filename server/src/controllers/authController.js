@@ -32,7 +32,7 @@ const emailConfigurationError = () => {
   console.warn(`[Email] SMTP sozlamalari yetishmayapti: ${getMissingEmailSettings().join(', ')}`);
   return new ApiError(
     503,
-    'Saytning xat yuborish xizmati hali sozlanmagan. Keyinroq urinib ko‘ring yoki sayt ma’muriga murojaat qiling.',
+    'Email xizmati vaqtincha ishlamayapti. Keyinroq qayta urinib ko‘ring.',
   );
 };
 
@@ -327,9 +327,11 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
   if (!shouldRequireEmail()) {
     return next(new ApiError(503, 'Parolni tiklash xizmati hozircha mavjud emas'));
   }
-  const configurationError = emailConfigurationError();
-  if (configurationError) {
-    return next(configurationError);
+  if (env.NODE_ENV !== 'development') {
+    const configurationError = emailConfigurationError();
+    if (configurationError) {
+      return next(configurationError);
+    }
   }
 
   const user = await User.findOne({ email: normalizedEmail })

@@ -19,7 +19,7 @@ export default function ForgotPasswordPage() {
       const { data } = await api.post('/auth/forgot-password', { email: email.trim().toLowerCase() });
       setMessage(data.message);
     } catch (requestError) {
-      setError(getApiErrorMessage(requestError, 'Parolni tiklash so‘rovi yuborilmadi. Qayta urinib ko‘ring.'));
+      setError(getApiErrorMessage(requestError, 'Email xizmati vaqtincha ishlamayapti. Keyinroq qayta urinib ko‘ring.'));
     } finally {
       setLoading(false);
     }

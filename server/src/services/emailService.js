@@ -140,6 +140,11 @@ export const sendVerificationCode = ({ email, name, code }) => {
 export const sendPasswordResetLink = ({ email, name, token }) => {
   const safeName = escapeHtml(name);
   const resetUrl = `${env.CLIENT_URL.replace(/\/$/, '')}/parolni-tiklash/${encodeURIComponent(token)}`;
+  if (env.NODE_ENV === 'development' && getMissingEmailSettings().length > 0) {
+    console.log(`[Email][development] Parolni tiklash havolasi (faqat mahalliy sinov uchun): ${resetUrl}`);
+    return Promise.resolve();
+  }
+
   return sendEmail({
     to: email,
     subject: 'VERDE hisobingiz parolini tiklash',
