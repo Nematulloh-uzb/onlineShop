@@ -98,7 +98,7 @@ describe('authentication and refresh sessions', () => {
 
   test('never returns a local reset link when email delivery is not configured in development', async () => {
     const originalNodeEnv = env.NODE_ENV;
-    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
     env.NODE_ENV = 'development';
     isEmailConfigured.mockReturnValue(false);
     getMissingEmailSettings.mockReturnValue(['SMTP_USER', 'SMTP_PASS']);
@@ -111,12 +111,12 @@ describe('authentication and refresh sessions', () => {
         });
       expect(User.findOne).not.toHaveBeenCalled();
       expect(User.create).not.toHaveBeenCalled();
-      expect(consoleError).toHaveBeenCalledWith(
-        '[Email] Gmail yuborish sozlamalari kiritilmagan: SMTP_USER, SMTP_PASS',
+      expect(consoleWarn).toHaveBeenCalledWith(
+        '[Email] SMTP sozlamalari yetishmayapti: SMTP_USER, SMTP_PASS',
       );
     } finally {
       env.NODE_ENV = originalNodeEnv;
-      consoleError.mockRestore();
+      consoleWarn.mockRestore();
     }
   });
 
@@ -311,6 +311,28 @@ describe('authentication and refresh sessions', () => {
       expect(result.statusCode).toBe(200);
       expect(result.body.data).toBeUndefined();
       expect(result.body.message).toMatch(/havolasi yuborildi/);
+    } finally {
+      env.NODE_ENV = originalNodeEnv;
+    }
+  });
+
+  test('does not report reset success and clears the token when email delivery fails', async () => {
+    const user = makeUser({ emailVerified: true });
+    User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
+    const originalNodeEnv = env.NODE_ENV;
+    env.NODE_ENV = 'development';
+    sendPasswordResetLink.mockRejectedValue(Object.assign(
+      new Error('Elektron xat yuborilmadi. Birozdan so‘ng qayta urinib ko‘ring.'),
+      { statusCode: 503 },
+    ));
+
+    try {
+      await expect(invoke(forgotPassword, { body: { email: user.email } }))
+        .rejects.toMatchObject({ statusCode: 503 });
+
+      expect(user.resetPasswordTokenHash).toBeUndefined();
+      expect(user.resetPasswordExpires).toBeUndefined();
+      expect(user.save).toHaveBeenCalledTimes(2);
     } finally {
       env.NODE_ENV = originalNodeEnv;
     }

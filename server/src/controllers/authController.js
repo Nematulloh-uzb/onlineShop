@@ -29,7 +29,7 @@ const shouldRequireEmail = () => env.NODE_ENV !== 'test';
 const emailConfigurationError = () => {
   if (isEmailConfigured()) return null;
 
-  console.error(`[Email] Gmail yuborish sozlamalari kiritilmagan: ${getMissingEmailSettings().join(', ')}`);
+  console.warn(`[Email] SMTP sozlamalari yetishmayapti: ${getMissingEmailSettings().join(', ')}`);
   return new ApiError(
     503,
     'Saytning xat yuborish xizmati hali sozlanmagan. Keyinroq urinib ko‘ring yoki sayt ma’muriga murojaat qiling.',
