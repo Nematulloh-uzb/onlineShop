@@ -18,7 +18,7 @@ export default function BrandLogo({ className = '' }) {
       >
         VERDE
       </text>
-      <circle cx="236" cy="22" r="4.5" fill="#8A9A5B" />
+      <circle cx="161" cy="22" r="4.5" fill="#8A9A5B" />
       <text
         x="8"
         y="47"
