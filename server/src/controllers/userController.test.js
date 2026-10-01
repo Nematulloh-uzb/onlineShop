@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import bcrypt from 'bcryptjs';
 import { mkdir, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -9,7 +10,7 @@ jest.unstable_mockModule('../models/User.js', () => ({
   User: { findById, findByIdAndUpdate },
 }));
 
-const { updateAvatar, updateMe } = await import('./userController.js');
+const { updateAvatar, updateMe, changePassword } = await import('./userController.js');
 
 const invoke = (handler, req) => new Promise((resolve, reject) => {
   const response = {
@@ -126,6 +127,49 @@ describe('profile editing', () => {
       role: 'customer',
       addresses: [],
       newsletterOptIn: true,
+    });
+  });
+
+  describe('changing account password', () => {
+    beforeEach(() => jest.clearAllMocks());
+
+    test('checks the current password and stores only a bcrypt hash', async () => {
+      const currentPasswordHash = await bcrypt.hash('oldpass123', 4);
+      const user = {
+        passwordHash: currentPasswordHash,
+        comparePassword: (candidate) => bcrypt.compare(candidate, user.passwordHash),
+        save: jest.fn().mockResolvedValue(undefined),
+      };
+      findById.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
+
+      const result = await invoke(changePassword, {
+        user: { _id: 'user-123' },
+        body: { currentPassword: 'oldpass123', newPassword: 'newpass456' },
+      });
+
+      expect(user.passwordHash).not.toBe('newpass456');
+      await expect(bcrypt.compare('newpass456', user.passwordHash)).resolves.toBe(true);
+      await expect(bcrypt.compare('oldpass123', user.passwordHash)).resolves.toBe(false);
+      expect(user.save).toHaveBeenCalledTimes(1);
+      expect(result.body.data).toBeUndefined();
+      expect(JSON.stringify(result.body)).not.toContain(user.passwordHash);
+    });
+
+    test('does not change password when the current password is incorrect', async () => {
+      const user = {
+        passwordHash: await bcrypt.hash('oldpass123', 4),
+        comparePassword: jest.fn().mockResolvedValue(false),
+        save: jest.fn(),
+      };
+      findById.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
+
+      await expect(invoke(changePassword, {
+        user: { _id: 'user-123' },
+        body: { currentPassword: 'wrongpass1', newPassword: 'newpass456' },
+      })).rejects.toMatchObject({ statusCode: 401 });
+
+      expect(user.save).not.toHaveBeenCalled();
+      expect(user.passwordHash).not.toBe('newpass456');
     });
   });
 

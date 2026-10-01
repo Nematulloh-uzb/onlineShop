@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 import { createHash, createHmac } from 'node:crypto';
+import bcrypt from 'bcryptjs';
 
 const findOne = jest.fn();
 const findById = jest.fn();
@@ -95,6 +96,10 @@ describe('authentication and refresh sessions', () => {
 
     expect(User.findOne).toHaveBeenCalledWith({ email: 'ada@example.com' });
     expect(User.create).toHaveBeenCalledWith(expect.objectContaining({ email: 'ada@example.com' }));
+    const storedPasswordHash = User.create.mock.calls[0][0].passwordHash;
+    expect(storedPasswordHash).not.toBe('secret123');
+    await expect(bcrypt.compare('secret123', storedPasswordHash)).resolves.toBe(true);
+    expect(result.body.data.user).not.toHaveProperty('passwordHash');
     expect(user.refreshTokenHash).toMatch(/^[a-f0-9]{64}$/);
     expect(result.response.cookies.refreshToken.options.httpOnly).toBe(true);
     expect(result.response.cookies.accessToken.options.path).toBe('/');
@@ -303,10 +308,12 @@ describe('authentication and refresh sessions', () => {
       resetPasswordExpires: { $gt: expect.any(Number) },
     });
     expect(user.passwordHash).not.toBe('must-not-be-returned');
+    await expect(bcrypt.compare('newpass123', user.passwordHash)).resolves.toBe(true);
     expect(user.resetPasswordTokenHash).toBeUndefined();
     expect(user.resetPasswordExpires).toBeUndefined();
     expect(user.save).toHaveBeenCalledTimes(2);
     expect(result.statusCode).toBe(200);
+    expect(result.body.data.user).not.toHaveProperty('passwordHash');
     expect(result.response.cookies.refreshToken).toBeDefined();
 
     User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(null) });
