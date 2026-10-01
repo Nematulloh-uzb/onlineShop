@@ -31,6 +31,7 @@ const makeUser = (overrides = {}) => ({
   email: 'ada@example.com',
   phone: '',
   role: 'customer',
+  emailVerified: true,
   addresses: [],
   newsletterOptIn: false,
   isActive: true,
@@ -111,6 +112,24 @@ describe('authentication and refresh sessions', () => {
   test('rejects malformed registration payloads as client errors', async () => {
     await expect(invoke(register, { body: null })).rejects.toMatchObject({ statusCode: 400 });
     expect(User.findOne).not.toHaveBeenCalled();
+  });
+
+  test('checks confirmed database emails before requiring configured email delivery on registration', async () => {
+    const user = makeUser({ emailVerified: true });
+    User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
+    isEmailConfigured.mockReturnValue(false);
+    const originalNodeEnv = env.NODE_ENV;
+    env.NODE_ENV = 'development';
+
+    try {
+      await expect(invoke(register, {
+        body: { name: 'Ada', email: user.email, password: 'secret123' },
+      })).rejects.toMatchObject({ statusCode: 409 });
+      expect(User.create).not.toHaveBeenCalled();
+      expect(sendVerificationCode).not.toHaveBeenCalled();
+    } finally {
+      env.NODE_ENV = originalNodeEnv;
+    }
   });
 
   test('normalizes registration email and stores a refresh-token hash', async () => {

@@ -88,7 +88,7 @@ export const register = catchAsync(async (req, res, next) => {
 
   let existingUser = await User.findOne({ email: normalizedEmail })
     .select('+emailVerificationCodeHash +emailVerificationExpires +emailVerificationAttempts');
-  if (existingUser && existingUser.emailVerified !== false) {
+  if (existingUser && existingUser.emailVerified === true) {
     return next(new ApiError(409, 'Ushbu elektron pochta manzili allaqachon ro‘yxatdan o‘tgan'));
   }
 
@@ -204,8 +204,7 @@ export const login = catchAsync(async (req, res, next) => {
   if (!isPasswordMatched) {
     return next(new ApiError(401, 'Elektron pochta yoki parol noto‘g‘ri'));
   }
-  // Only block if emailVerified is explicitly false (backwards compatible with undefined).
-  if (user.emailVerified === false) {
+  if (user.emailVerified !== true) {
     return next(new ApiError(403, 'Davom etish uchun avval elektron pochtangizni tasdiqlang.'));
   }
 
@@ -331,7 +330,7 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
   }
 
   if (configurationError && env.NODE_ENV === 'development') {
-    if (user && user.isActive && user.emailVerified !== false) {
+    if (user && user.isActive && user.emailVerified === true) {
       const token = randomBytes(32).toString('hex');
       user.resetPasswordTokenHash = createHash('sha256').update(token).digest('hex');
       user.resetPasswordExpires = new Date(Date.now() + 30 * 60 * 1000);
@@ -351,7 +350,7 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
     });
   }
 
-  if (user && user.isActive && user.emailVerified !== false) {
+  if (user && user.isActive && user.emailVerified === true) {
     const token = randomBytes(32).toString('hex');
     user.resetPasswordTokenHash = createHash('sha256').update(token).digest('hex');
     user.resetPasswordExpires = new Date(Date.now() + 30 * 60 * 1000);
