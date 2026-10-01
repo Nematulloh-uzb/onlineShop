@@ -44,20 +44,23 @@ describe('email delivery configuration', () => {
   test('returns 503 and never creates a mail transport when credentials are missing', async () => {
     expect(getMissingEmailSettings()).toEqual(['SMTP_USER', 'SMTP_PASS']);
     const consoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    await expect(sendVerificationCode({
-      email: 'user@example.com',
-      name: 'Foydalanuvchi',
-      code: '123456',
-    })).rejects.toMatchObject({
-      statusCode: 503,
-      message: 'Elektron xat yuborish xizmati sozlanmagan.',
-    });
-    expect(consoleWarn).toHaveBeenCalledWith(
-      '[Email] SMTP sozlamalari yetishmayapti: SMTP_USER, SMTP_PASS',
-    );
-    expect(createTransport).not.toHaveBeenCalled();
-    expect(sendMail).not.toHaveBeenCalled();
-    consoleWarn.mockRestore();
+    try {
+      await expect(sendVerificationCode({
+        email: 'user@example.com',
+        name: 'Foydalanuvchi',
+        code: '123456',
+      })).rejects.toMatchObject({
+        statusCode: 503,
+        message: 'Elektron xat yuborish xizmati sozlanmagan.',
+      });
+      expect(consoleWarn).toHaveBeenCalledWith(
+        '[Email] SMTP sozlamalari yetishmayapti: SMTP_USER, SMTP_PASS',
+      );
+      expect(createTransport).not.toHaveBeenCalled();
+      expect(sendMail).not.toHaveBeenCalled();
+    } finally {
+      consoleWarn.mockRestore();
+    }
   });
 
   test('does not include SMTP error details or credentials in delivery logs', async () => {
