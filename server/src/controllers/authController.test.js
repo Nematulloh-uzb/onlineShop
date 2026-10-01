@@ -98,8 +98,10 @@ describe('authentication and refresh sessions', () => {
 
   test('never returns a local reset link when email delivery is not configured in development', async () => {
     const originalNodeEnv = env.NODE_ENV;
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
     env.NODE_ENV = 'development';
     isEmailConfigured.mockReturnValue(false);
+    getMissingEmailSettings.mockReturnValue(['SMTP_USER', 'SMTP_PASS']);
 
     try {
       await expect(invoke(forgotPassword, { body: { email: 'ada@example.com' } }))
@@ -109,8 +111,12 @@ describe('authentication and refresh sessions', () => {
         });
       expect(User.findOne).not.toHaveBeenCalled();
       expect(User.create).not.toHaveBeenCalled();
+      expect(consoleError).toHaveBeenCalledWith(
+        '[Email] Gmail yuborish sozlamalari kiritilmagan: SMTP_USER, SMTP_PASS',
+      );
     } finally {
       env.NODE_ENV = originalNodeEnv;
+      consoleError.mockRestore();
     }
   });
 
