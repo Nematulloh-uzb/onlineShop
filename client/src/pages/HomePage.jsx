@@ -95,7 +95,7 @@ export default function HomePage() {
           <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
               <p className="mb-2 font-['Inter'] text-xs font-semibold uppercase tracking-[0.16em] text-[#71814B]">
-                AURA erkaklar kolleksiyasi
+                VERDE erkaklar kolleksiyasi
               </p>
               <h2 className="font-['Playfair_Display'] text-3xl font-semibold text-[#1A1A1A] md:text-4xl">
                 Uslubingizni tanlang
