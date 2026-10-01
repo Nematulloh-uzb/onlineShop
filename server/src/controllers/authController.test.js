@@ -93,17 +93,19 @@ describe('authentication and refresh sessions', () => {
     expect(User.findOne).not.toHaveBeenCalled();
   });
 
-  test('does not issue a development reset link for an email without an eligible database account', async () => {
-    User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(null) });
+  test('never returns a local reset link when email delivery is not configured in development', async () => {
     const originalNodeEnv = env.NODE_ENV;
     env.NODE_ENV = 'development';
     isEmailConfigured.mockReturnValue(false);
 
     try {
-      const result = await invoke(forgotPassword, { body: { email: 'missing@example.com' } });
-      expect(User.findOne).toHaveBeenCalledWith({ email: 'missing@example.com' });
-      expect(result.body.data).toBeUndefined();
-      expect(result.body.message).toMatch(/Agar bu manzil bilan faol va tasdiqlangan hisob mavjud bo‘lsa/);
+      await expect(invoke(forgotPassword, { body: { email: 'ada@example.com' } }))
+        .rejects.toMatchObject({
+          statusCode: 503,
+          message: expect.stringContaining('SMTP_USER (Gmail manzili)'),
+        });
+      expect(User.findOne).not.toHaveBeenCalled();
+      expect(User.create).not.toHaveBeenCalled();
     } finally {
       env.NODE_ENV = originalNodeEnv;
     }
@@ -322,23 +324,26 @@ describe('authentication and refresh sessions', () => {
     }
   });
 
-  test('provides a working reset link in development when SMTP is not configured', async () => {
+  test('sends reset links by email in development when SMTP is configured', async () => {
     const user = makeUser({ emailVerified: true });
     User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
     const originalNodeEnv = env.NODE_ENV;
     env.NODE_ENV = 'development';
-    isEmailConfigured.mockReturnValue(false);
+    isEmailConfigured.mockReturnValue(true);
 
     try {
       const result = await invoke(forgotPassword, { body: { email: user.email } });
-      const resetUrl = new URL(result.body.data.developmentResetUrl);
-      const token = resetUrl.pathname.split('/').pop();
+      const [{ token }] = sendPasswordResetLink.mock.calls[0];
 
-      expect(resetUrl.origin).toBe(env.CLIENT_URL);
       expect(user.resetPasswordTokenHash).toBe(createHash('sha256').update(token).digest('hex'));
       expect(user.resetPasswordExpires.getTime()).toBeGreaterThan(Date.now());
-      expect(result.body.message).toMatch(/Lokal sinov havolasi tayyor/);
-      expect(sendPasswordResetLink).not.toHaveBeenCalled();
+      expect(result.body.data).toBeUndefined();
+      expect(result.body.message).toMatch(/havolasi yuborildi/);
+      expect(sendPasswordResetLink).toHaveBeenCalledWith({
+        email: user.email,
+        name: user.name,
+        token,
+      });
     } finally {
       env.NODE_ENV = originalNodeEnv;
     }
