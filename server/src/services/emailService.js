@@ -5,7 +5,7 @@ const isConfigured = () => Boolean(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PA
 
 const getTransport = () => {
   if (!isConfigured()) {
-    const error = new Error('Email yuborilmadi: Gmail SMTP sozlanmagan. Lokal ishga tushirishda server/.env, Dockerda loyiha boshidagi .env fayliga SMTP_USER (Gmail manzili) va SMTP_PASS (Google App Password) kiriting, so‘ng serverni qayta ishga tushiring.');
+    const error = new Error('Gmail orqali xat yuborish sozlanmagan. server/.env fayliga, Dockerda esa loyiha boshidagi .env fayliga SMTP_USER (Gmail manzili) va SMTP_PASS (Google ilova paroli) qiymatlarini kiriting. So‘ng serverni qayta ishga tushiring.');
     error.code = 'EMAIL_NOT_CONFIGURED';
     throw error;
   }
@@ -48,7 +48,7 @@ const createEmailHtml = ({ preheader, content }) => `
         </tr>
         <tr>
           <td style="padding:18px 32px;background:#f8f8f5;color:#73756c;font-size:12px;line-height:1.5">
-            Bu avtomatik xabar. Javob yozishingiz shart emas.
+            Ushbu xat avtomatik yuborildi. Javob yozishingiz shart emas.
           </td>
         </tr>
       </table>
@@ -73,7 +73,7 @@ const sendEmail = async ({ to, subject, text, html }) => {
     }
 
     console.error('[Email] Xat yuborilmadi:', error);
-    const deliveryError = new Error('Email yuborilmadi. Gmail manzili, Google App Password, SMTP_HOST/PORT sozlamalari va internet aloqasini tekshirib, qayta urinib ko‘ring.');
+    const deliveryError = new Error('Xat yuborilmadi. Gmail manzili, Google ilova paroli, xat jo‘natish sozlamalari va internet aloqasini tekshirib, qayta urinib ko‘ring.');
     deliveryError.statusCode = 503;
     throw deliveryError;
   }
@@ -93,7 +93,7 @@ export const sendVerificationCode = ({ email, name, code }) => {
       '',
       code,
       '',
-      'Kod 10 daqiqa davomida amal qiladi va faqat bir marta ishlatiladi.',
+      'Kod 10 daqiqa amal qiladi va faqat bir marta ishlatiladi.',
       'Agar bu hisobni siz yaratmagan bo‘lsangiz, ushbu xatni e’tiborsiz qoldiring.',
       '',
       'Hurmat bilan, VERDE jamoasi',
@@ -104,7 +104,7 @@ export const sendVerificationCode = ({ email, name, code }) => {
         <p style="margin:0 0 16px">Assalomu alaykum, ${safeName}!</p>
         <p style="margin:0 0 18px">VERDE hisobingizni tasdiqlash uchun quyidagi kodni kiriting:</p>
         <p style="margin:0 0 20px;padding:14px 16px;background:#f4f5ef;border:1px solid #e6e9dc;text-align:center;font-size:30px;font-weight:bold;letter-spacing:10px;color:#56642b">${code}</p>
-        <p style="margin:0 0 12px;color:#62645c">Kod 10 daqiqa davomida amal qiladi va faqat bir marta ishlatiladi.</p>
+        <p style="margin:0 0 12px;color:#62645c">Kod 10 daqiqa amal qiladi va faqat bir marta ishlatiladi.</p>
         <p style="margin:0;color:#62645c">Agar bu hisobni siz yaratmagan bo‘lsangiz, ushbu xatni e’tiborsiz qoldiring.</p>
         <p style="margin:24px 0 0">Hurmat bilan,<br><strong>VERDE jamoasi</strong></p>
       `,
@@ -125,7 +125,7 @@ export const sendPasswordResetLink = ({ email, name, token }) => {
       'Yangi parol o‘rnatish uchun quyidagi havolani oching:',
       resetUrl,
       '',
-      'Havola 30 daqiqa davomida amal qiladi va faqat bir marta ishlatiladi.',
+      'Havola 30 daqiqa amal qiladi va faqat bir marta ishlatiladi.',
       'Agar parolni tiklashni siz so‘ramagan bo‘lsangiz, ushbu xatni e’tiborsiz qoldiring. Hisobingiz paroli o‘zgarmaydi.',
       '',
       'Hurmat bilan, VERDE jamoasi',
@@ -138,7 +138,7 @@ export const sendPasswordResetLink = ({ email, name, token }) => {
         <p style="margin:0 0 22px;text-align:center">
           <a href="${escapeHtml(resetUrl)}" style="display:inline-block;padding:13px 24px;background:#56642b;color:#fff;text-decoration:none;font-weight:bold">Parolni tiklash</a>
         </p>
-        <p style="margin:0 0 12px;color:#62645c">Havola 30 daqiqa davomida amal qiladi va faqat bir marta ishlatiladi.</p>
+        <p style="margin:0 0 12px;color:#62645c">Havola 30 daqiqa amal qiladi va faqat bir marta ishlatiladi.</p>
         <p style="margin:0;color:#62645c">Agar parolni tiklashni siz so‘ramagan bo‘lsangiz, ushbu xatni e’tiborsiz qoldiring. Hisobingiz paroli o‘zgarmaydi.</p>
         <p style="margin:24px 0 0">Hurmat bilan,<br><strong>VERDE jamoasi</strong></p>
       `,
