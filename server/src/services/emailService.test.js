@@ -53,7 +53,7 @@ describe('email delivery configuration', () => {
         code: '123456',
       })).rejects.toMatchObject({
         statusCode: 503,
-        message: 'Elektron xat yuborish xizmati sozlanmagan.',
+        message: 'Email xizmati vaqtincha ishlamayapti. Keyinroq qayta urinib ko‘ring.',
       });
       expect(consoleWarn).toHaveBeenCalledWith(
         '[Email] SMTP sozlamalari yetishmayapti: SMTP_USER, SMTP_PASS',
@@ -81,7 +81,7 @@ describe('email delivery configuration', () => {
         token: 'one-time-token',
       })).rejects.toMatchObject({
         statusCode: 503,
-        message: 'Elektron xat yuborilmadi. Birozdan so‘ng qayta urinib ko‘ring yoki sayt ma’muriga murojaat qiling.',
+        message: 'Email xizmati vaqtincha ishlamayapti. Keyinroq qayta urinib ko‘ring.',
       });
 
       const loggedText = consoleError.mock.calls.flat().join(' ');
@@ -121,14 +121,16 @@ describe('email delivery configuration', () => {
     emailEnv.SMTP_PASS = 'app-password';
     sendMail.mockResolvedValue({ messageId: 'test-message', accepted: [], rejected: ['user@example.com'] });
 
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
     await expect(sendPasswordResetLink({
       email: 'user@example.com',
       name: 'Dilshod',
       token: 'one-time-token',
     })).rejects.toMatchObject({
       statusCode: 503,
-      message: 'Elektron xat yuborilmadi. Birozdan so‘ng qayta urinib ko‘ring yoki sayt ma’muriga murojaat qiling.',
+      message: 'Email xizmati vaqtincha ishlamayapti. Keyinroq qayta urinib ko‘ring.',
     });
+    consoleError.mockRestore();
   });
 
   test('prints the password reset URL in development without SMTP and never exposes it to the client', async () => {
@@ -163,11 +165,12 @@ describe('email delivery configuration', () => {
         token: 'production-token',
       })).rejects.toMatchObject({
         statusCode: 503,
-        message: 'Elektron xat yuborish xizmati sozlanmagan.',
+        message: 'Email xizmati vaqtincha ishlamayapti. Keyinroq qayta urinib ko‘ring.',
       });
-      expect(consoleLogSpyCalls()).toBe(0);
+      expect(consoleLog).not.toHaveBeenCalled();
       expect(createTransport).not.toHaveBeenCalled();
     } finally {
+      consoleLog.mockRestore();
       consoleWarn.mockRestore();
     }
   });

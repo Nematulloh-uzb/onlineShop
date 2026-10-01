@@ -11,7 +11,7 @@ const getTransport = () => {
   const missingSettings = getMissingEmailSettings();
   if (missingSettings.length > 0) {
     console.warn(`[Email] SMTP sozlamalari yetishmayapti: ${missingSettings.join(', ')}`);
-    const error = new Error('Elektron xat yuborish xizmati sozlanmagan.');
+    const error = new Error('Email xizmati vaqtincha ishlamayapti. Keyinroq qayta urinib ko‘ring.');
     error.code = 'EMAIL_NOT_CONFIGURED';
     throw error;
   }
@@ -98,7 +98,7 @@ const sendEmail = async ({ to, subject, text, html }) => {
     }
 
     logEmailFailure(error);
-    const deliveryError = new Error('Elektron xat yuborilmadi. Birozdan so‘ng qayta urinib ko‘ring yoki sayt ma’muriga murojaat qiling.');
+    const deliveryError = new Error('Email xizmati vaqtincha ishlamayapti. Keyinroq qayta urinib ko‘ring.');
     deliveryError.statusCode = 503;
     throw deliveryError;
   }

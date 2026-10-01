@@ -96,27 +96,27 @@ describe('authentication and refresh sessions', () => {
     expect(User.findOne).not.toHaveBeenCalled();
   });
 
-  test('never returns a local reset link when email delivery is not configured in development', async () => {
+  test('logs the reset link through the development email service and never returns it in the API response', async () => {
     const originalNodeEnv = env.NODE_ENV;
-    const consoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const user = makeUser();
     env.NODE_ENV = 'development';
     isEmailConfigured.mockReturnValue(false);
     getMissingEmailSettings.mockReturnValue(['SMTP_USER', 'SMTP_PASS']);
+    User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
 
     try {
-      await expect(invoke(forgotPassword, { body: { email: 'ada@example.com' } }))
-        .rejects.toMatchObject({
-          statusCode: 503,
-          message: expect.stringContaining('Saytning xat yuborish xizmati hali sozlanmagan'),
-        });
-      expect(User.findOne).not.toHaveBeenCalled();
+      const result = await invoke(forgotPassword, { body: { email: user.email } });
+
+      expect(result.statusCode).toBe(200);
+      expect(result.body.message).toMatch(/havolasi yuborildi/);
+      expect(JSON.stringify(result.body)).not.toContain('/parolni-tiklash/');
+      expect(sendPasswordResetLink).toHaveBeenCalledWith(expect.objectContaining({
+        email: user.email,
+        token: expect.any(String),
+      }));
       expect(User.create).not.toHaveBeenCalled();
-      expect(consoleWarn).toHaveBeenCalledWith(
-        '[Email] SMTP sozlamalari yetishmayapti: SMTP_USER, SMTP_PASS',
-      );
     } finally {
       env.NODE_ENV = originalNodeEnv;
-      consoleWarn.mockRestore();
     }
   });
 
@@ -347,7 +347,7 @@ describe('authentication and refresh sessions', () => {
       await expect(invoke(forgotPassword, { body: { email: 'ada@example.com' } }))
         .rejects.toMatchObject({
           statusCode: 503,
-          message: expect.stringContaining('Saytning xat yuborish xizmati hali sozlanmagan'),
+          message: 'Email xizmati vaqtincha ishlamayapti. Keyinroq qayta urinib ko‘ring.',
         });
       expect(User.findOne).not.toHaveBeenCalled();
     } finally {
