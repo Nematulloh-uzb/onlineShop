@@ -9,11 +9,11 @@ export default function Footer() {
       <div className="mx-auto max-w-[1280px] px-6 md:px-10">
         <div className="grid grid-cols-1 gap-10 border-b border-white/10 pb-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2">
-            <Link to="/" aria-label="AURA Eco Atelier bosh sahifa" className="inline-flex">
-              <BrandLogo className="h-12 w-auto max-w-[196px] text-white" />
+            <Link to="/" aria-label="VERDE Luxe Nature bosh sahifa" className="inline-flex">
+              <BrandLogo className="h-12 w-auto max-w-[230px] text-white" />
             </Link>
             <p className="mt-4 max-w-sm font-['Inter'] text-sm leading-relaxed text-white/65">
-              ECO ATELIER — tabiiy materiallar va o‘ylangan dizayn uyg‘unligida yaratilgan erkaklar uslubi.
+              LUXE NATURE — tabiiy nafislik va puxta tanlangan erkaklar uslubi.
             </p>
           </div>
 
@@ -59,7 +59,7 @@ export default function Footer() {
 
         <div className="flex flex-col items-center justify-between gap-3 pt-6 sm:flex-row">
           <p className="font-['Inter'] text-xs text-white/45">
-            © {currentYear} AURA. Barcha huquqlar himoyalangan.
+            © {currentYear} VERDE. Barcha huquqlar himoyalangan.
           </p>
           <p className="font-['Inter'] text-xs text-white/45">
             Buyurtma va hisob ma’lumotlari faqat tizimga kirgan foydalanuvchiga ko‘rsatiladi.

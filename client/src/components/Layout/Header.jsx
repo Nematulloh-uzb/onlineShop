@@ -46,8 +46,8 @@ export default function Header() {
       }`}
     >
       <div className="h-20 max-w-[1280px] mx-auto px-6 md:px-10 flex items-center justify-between gap-4">
-        <Link to="/" aria-label="AURA Eco Atelier bosh sahifa" className="group flex shrink-0 items-center">
-          <BrandLogo className="h-10 w-auto max-w-[164px] text-[#1A1A1A] transition-transform group-hover:scale-105" />
+        <Link to="/" aria-label="VERDE Luxe Nature bosh sahifa" className="group flex shrink-0 items-center">
+          <BrandLogo className="h-10 w-auto max-w-[192px] text-[#1A1A1A] transition-transform group-hover:scale-105" />
         </Link>
 
         {/* Desktop Nav */}

@@ -34,10 +34,10 @@ export default function HomePage() {
   return (
     <>
       <Helmet>
-        <title>AURA Eco Atelier — Erkaklar kolleksiyasi</title>
+        <title>VERDE Luxe Nature — Erkaklar kolleksiyasi</title>
         <meta
           name="description"
-          content="AURA Eco Atelier erkaklar kolleksiyasi: tabiiy materiallar, puxta bichim va kundalik uslubga mos aksessuarlar."
+          content="VERDE Luxe Nature erkaklar kolleksiyasi: tabiiy materiallar, puxta bichim va kundalik uslubga mos aksessuarlar."
         />
       </Helmet>
 
@@ -55,7 +55,7 @@ export default function HomePage() {
           <div className="min-w-0 max-w-2xl text-white">
             <p className="mb-5 inline-flex max-w-full flex-wrap items-center gap-2 font-['Inter'] text-xs font-semibold uppercase tracking-[0.12em] md:tracking-[0.2em] text-[#E2E8D1]">
               <Leaf size={16} aria-hidden="true" />
-              AURA · ECO ATELIER
+              VERDE · LUXE NATURE
             </p>
             <h1 className="font-['Playfair_Display'] text-5xl font-medium leading-[1.08] text-white md:text-7xl">
               Uslubingiz. Qoidangiz.
