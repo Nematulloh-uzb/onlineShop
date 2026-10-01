@@ -13,6 +13,9 @@ const CheckoutPage = lazy(() => import('./pages/CheckoutPage.jsx'));
 const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage.jsx'));
 const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage.jsx'));
+const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage.jsx'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage.jsx'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage.jsx'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage.jsx'));
 const WishlistPage = lazy(() => import('./pages/WishlistPage.jsx'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'));
@@ -35,6 +38,9 @@ function App() {
           </Route>
           <Route path="kirish" element={<LoginPage />} />
           <Route path="royxat" element={<RegisterPage />} />
+          <Route path="emailni-tasdiqlash" element={<VerifyEmailPage />} />
+          <Route path="parolni-tiklash" element={<ForgotPasswordPage />} />
+          <Route path="parolni-tiklash/:token" element={<ResetPasswordPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

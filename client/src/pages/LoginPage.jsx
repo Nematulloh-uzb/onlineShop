@@ -11,12 +11,14 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [needsVerification, setNeedsVerification] = useState(false);
 
   const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setNeedsVerification(false);
     setLoading(true);
     try {
       await login({ email: form.email.trim().toLowerCase(), password: form.password });
@@ -26,6 +28,7 @@ export default function LoginPage() {
       });
     } catch (requestError) {
       setError(getApiErrorMessage(requestError, 'Kirish amalga oshmadi. Ma’lumotlarni tekshirib, qayta urinib ko‘ring.'));
+      setNeedsVerification(requestError.response?.status === 403);
     } finally {
       setLoading(false);
     }
@@ -56,13 +59,22 @@ export default function LoginPage() {
               {error}
             </p>
           )}
+          {needsVerification && (
+            <Link
+              to={`/emailni-tasdiqlash?email=${encodeURIComponent(form.email.trim().toLowerCase())}`}
+              className="mb-4 block rounded-lg bg-[#F0F2E8] px-4 py-3 font-['Inter'] text-sm font-semibold text-[#56642B] hover:text-[#8A9A5B]"
+            >
+              Tasdiqlash kodini kiriting yoki qayta yuboring
+            </Link>
+          )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-              <label className="font-['Inter'] text-[13px] font-semibold text-[#1A1A1A] block mb-1">
+              <label htmlFor="login-email" className="font-['Inter'] text-[13px] font-semibold text-[#1A1A1A] block mb-1">
                 Elektron pochta
               </label>
               <input
+                id="login-email"
                 autoComplete="email"
                 name="email"
                 type="email"
@@ -74,12 +86,16 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="font-['Inter'] text-[13px] font-semibold text-[#1A1A1A]">
+              <div className="mb-1 flex items-center justify-between">
+                <label htmlFor="login-password" className="font-['Inter'] text-[13px] font-semibold text-[#1A1A1A]">
                   Parol
                 </label>
+                <Link to="/parolni-tiklash" className="font-['Inter'] text-xs font-semibold text-[#56642B] hover:text-[#8A9A5B]">
+                  Parolni unutdingizmi?
+                </Link>
               </div>
               <input
+                id="login-password"
                 autoComplete="current-password"
                 name="password"
                 type="password"

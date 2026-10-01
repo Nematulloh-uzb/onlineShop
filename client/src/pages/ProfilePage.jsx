@@ -24,7 +24,38 @@ export default function ProfilePage() {
   const [avatarError, setAvatarError] = useState('');
   const [avatarMessage, setAvatarMessage] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    name: user?.name || '',
+    surname: user?.surname || '',
+    phone: user?.phone || '',
+    newsletterOptIn: Boolean(user?.newsletterOptIn),
+  });
+  const [profileError, setProfileError] = useState('');
+  const [profileMessage, setProfileMessage] = useState('');
   const avatarInput = useRef(null);
+  const profileMutation = useMutation({
+    mutationFn: async (profile) => {
+      const { data } = await api.patch('/users/me', profile);
+      return data.data.user;
+    },
+    onSuccess: (updatedUser) => {
+      updateUser(updatedUser);
+      setProfileForm({
+        name: updatedUser.name || '',
+        surname: updatedUser.surname || '',
+        phone: updatedUser.phone || '',
+        newsletterOptIn: Boolean(updatedUser.newsletterOptIn),
+      });
+      setProfileError('');
+      setProfileMessage('Profil ma’lumotlari saqlandi.');
+      setEditingProfile(false);
+    },
+    onError: (error) => {
+      setProfileError(getApiErrorMessage(error, 'Profil ma’lumotlarini saqlab bo‘lmadi.'));
+      setProfileMessage('');
+    },
+  });
   const avatarMutation = useMutation({
     mutationFn: async (file) => {
       const formData = new FormData();
@@ -62,6 +93,29 @@ export default function ProfilePage() {
     } catch (error) {
       setLogoutError(getApiErrorMessage(error, 'Tizimdan chiqishda xatolik yuz berdi.'));
     }
+  };
+
+  const handleProfileSubmit = (event) => {
+    event.preventDefault();
+    setProfileError('');
+    setProfileMessage('');
+    profileMutation.mutate({
+      name: profileForm.name.trim(),
+      surname: profileForm.surname.trim(),
+      phone: profileForm.phone.trim(),
+      newsletterOptIn: profileForm.newsletterOptIn,
+    });
+  };
+
+  const cancelProfileEdit = () => {
+    setProfileForm({
+      name: user?.name || '',
+      surname: user?.surname || '',
+      phone: user?.phone || '',
+      newsletterOptIn: Boolean(user?.newsletterOptIn),
+    });
+    setProfileError('');
+    setEditingProfile(false);
   };
 
   useEffect(() => {
@@ -160,11 +214,72 @@ export default function ProfilePage() {
               {avatarMessage && (
                 <p role="status" className="mt-4 rounded-lg bg-[#F0F2E8] px-3 py-2 font-['Inter'] text-sm text-[#56642B]">{avatarMessage}</p>
               )}
-              <h2 className="font-['Inter'] text-lg font-semibold text-[#1A1A1A]">
-                {[user?.name, user?.surname].filter(Boolean).join(' ')}
-              </h2>
-              <p className="mt-1 break-all font-['Inter'] text-sm text-[#6B6B6B]">{user?.email}</p>
-              {user?.phone && <p className="mt-1 font-['Inter'] text-sm text-[#6B6B6B]">{user.phone}</p>}
+              <div className="mt-5 flex items-center justify-between gap-3">
+                <h2 className="font-['Inter'] text-lg font-semibold text-[#1A1A1A]">Shaxsiy ma’lumotlar</h2>
+                {!editingProfile && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProfileMessage('');
+                      setEditingProfile(true);
+                    }}
+                    className="rounded-lg border border-[#E5E5E5] px-3 py-2 font-['Inter'] text-xs font-semibold text-[#56642B] transition-colors hover:border-[#8A9A5B]"
+                  >
+                    Tahrirlash
+                  </button>
+                )}
+              </div>
+              {profileError && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 font-['Inter'] text-sm text-red-700">{profileError}</p>}
+              {profileMessage && <p role="status" className="mt-3 rounded-lg bg-[#F0F2E8] px-3 py-2 font-['Inter'] text-sm text-[#56642B]">{profileMessage}</p>}
+              {editingProfile ? (
+                <form onSubmit={handleProfileSubmit} className="mt-4 space-y-3">
+                  {[
+                    ['name', 'Ism', 'given-name', 80],
+                    ['surname', 'Familiya', 'family-name', 80],
+                    ['phone', 'Telefon raqami', 'tel', 30],
+                  ].map(([name, label, autoComplete, maxLength]) => (
+                    <div key={name}>
+                      <label htmlFor={`profile-${name}`} className="mb-1 block font-['Inter'] text-xs font-semibold text-[#1A1A1A]">{label}</label>
+                      <input
+                        id={`profile-${name}`}
+                        type={name === 'phone' ? 'tel' : 'text'}
+                        autoComplete={autoComplete}
+                        maxLength={maxLength}
+                        required={name === 'name'}
+                        value={profileForm[name]}
+                        onChange={(event) => setProfileForm((current) => ({ ...current, [name]: event.target.value }))}
+                        className="h-11 w-full rounded-lg border border-[#E5E5E5] px-3 font-['Inter'] text-sm focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]"
+                      />
+                    </div>
+                  ))}
+                  <label className="flex items-center gap-2 py-1 font-['Inter'] text-sm text-[#6B6B6B]">
+                    <input
+                      type="checkbox"
+                      checked={profileForm.newsletterOptIn}
+                      onChange={(event) => setProfileForm((current) => ({ ...current, newsletterOptIn: event.target.checked }))}
+                      className="h-4 w-4 accent-[#56642B]"
+                    />
+                    Yangiliklar va takliflarni emailga olish
+                  </label>
+                  <p className="break-all font-['Inter'] text-xs text-[#6B6B6B]">Email: {user?.email} (o‘zgartirib bo‘lmaydi)</p>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button type="submit" disabled={profileMutation.isPending} className="rounded-lg bg-[#56642B] px-4 py-2.5 font-['Inter'] text-sm font-semibold text-white hover:bg-[#71814B] disabled:opacity-60">
+                      {profileMutation.isPending ? 'Saqlanmoqda…' : 'Saqlash'}
+                    </button>
+                    <button type="button" onClick={cancelProfileEdit} disabled={profileMutation.isPending} className="rounded-lg border border-[#E5E5E5] px-4 py-2.5 font-['Inter'] text-sm font-semibold text-[#6B6B6B] hover:border-[#8A9A5B]">
+                      Bekor qilish
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <p className="mt-2 font-['Inter'] text-sm text-[#1A1A1A]">
+                    {[user?.name, user?.surname].filter(Boolean).join(' ')}
+                  </p>
+                  <p className="mt-1 break-all font-['Inter'] text-sm text-[#6B6B6B]">{user?.email}</p>
+                  {user?.phone && <p className="mt-1 font-['Inter'] text-sm text-[#6B6B6B]">{user.phone}</p>}
+                </>
+              )}
               <Link
                 to="/istaklar"
                 className="mt-5 inline-flex items-center gap-2 font-['Inter'] text-sm font-semibold text-[#56642B] hover:text-[#8A9A5B]"

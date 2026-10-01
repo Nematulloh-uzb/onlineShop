@@ -27,6 +27,12 @@ services:
       - CLIENT_URL=${CLIENT_URL:?Set the public HTTPS CLIENT_URL in .env}
       - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET:?Set JWT_ACCESS_SECRET in .env}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:?Set JWT_REFRESH_SECRET in .env}
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-465}
+      - SMTP_SECURE=${SMTP_SECURE:-true}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_FROM=${SMTP_FROM:-}
     depends_on:
       mongo:
         condition: service_healthy

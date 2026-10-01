@@ -4,11 +4,12 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 const findById = jest.fn();
+const findByIdAndUpdate = jest.fn();
 jest.unstable_mockModule('../models/User.js', () => ({
-  User: { findById },
+  User: { findById, findByIdAndUpdate },
 }));
 
-const { updateAvatar } = await import('./userController.js');
+const { updateAvatar, updateMe } = await import('./userController.js');
 
 const invoke = (handler, req) => new Promise((resolve, reject) => {
   const response = {
@@ -84,5 +85,55 @@ describe('profile avatar upload', () => {
     await expect(invoke(updateAvatar, { user: { _id: 'user-123' } }))
       .rejects.toMatchObject({ statusCode: 400 });
     expect(findById).not.toHaveBeenCalled();
+  });
+});
+
+describe('profile editing', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  test('updates editable account fields and returns the public user', async () => {
+    const user = {
+      _id: 'user-123',
+      name: 'Ada',
+      surname: 'Byron',
+      email: 'ada@example.com',
+      phone: '123456',
+      avatarUrl: '',
+      role: 'customer',
+      addresses: [],
+      newsletterOptIn: true,
+      passwordHash: 'private',
+    };
+    findByIdAndUpdate.mockResolvedValue(user);
+
+    const result = await invoke(updateMe, {
+      user: { _id: 'user-123' },
+      body: { name: ' Ada ', surname: 'Byron', phone: '123456', newsletterOptIn: true },
+    });
+
+    expect(findByIdAndUpdate).toHaveBeenCalledWith(
+      'user-123',
+      { name: 'Ada', surname: 'Byron', phone: '123456', newsletterOptIn: true },
+      { new: true, runValidators: true },
+    );
+    expect(result.body.data.user).toEqual({
+      id: 'user-123',
+      name: 'Ada',
+      surname: 'Byron',
+      email: 'ada@example.com',
+      phone: '123456',
+      avatarUrl: '',
+      role: 'customer',
+      addresses: [],
+      newsletterOptIn: true,
+    });
+  });
+
+  test('rejects malformed profile changes before database access', async () => {
+    await expect(invoke(updateMe, {
+      user: { _id: 'user-123' },
+      body: { name: '   ' },
+    })).rejects.toMatchObject({ statusCode: 400 });
+    expect(findByIdAndUpdate).not.toHaveBeenCalled();
   });
 });

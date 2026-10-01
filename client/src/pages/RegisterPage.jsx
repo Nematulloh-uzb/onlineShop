@@ -22,12 +22,16 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
     try {
-      await register({
+      const result = await register({
         name: form.name.trim(),
         surname: form.surname.trim(),
         email: form.email.trim().toLowerCase(),
         password: form.password,
       });
+      if (result.data?.email) {
+        navigate(`/emailni-tasdiqlash?email=${encodeURIComponent(result.data.email)}`, { replace: true });
+        return;
+      }
       navigate('/profil', { replace: true });
     } catch (requestError) {
       setError(getApiErrorMessage(requestError, 'Hisob yaratilmadi. Iltimos, qayta urinib ko‘ring.'));
