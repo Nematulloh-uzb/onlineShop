@@ -76,6 +76,22 @@ beforeEach(() => {
 });
 
 describe('authentication and refresh sessions', () => {
+  test('rejects malformed email addresses before database lookup in all credential flows', async () => {
+    await expect(invoke(register, {
+      body: { name: 'Ada', email: 'not-an-email', password: 'secret123' },
+    })).rejects.toMatchObject({ statusCode: 400 });
+
+    await expect(invoke(login, {
+      body: { email: 'ada..byron@gmail.com', password: 'secret123' },
+    })).rejects.toMatchObject({ statusCode: 400 });
+
+    await expect(invoke(forgotPassword, {
+      body: { email: 'ada@gmail' },
+    })).rejects.toMatchObject({ statusCode: 400 });
+
+    expect(User.findOne).not.toHaveBeenCalled();
+  });
+
   test('rejects malformed registration payloads as client errors', async () => {
     await expect(invoke(register, { body: null })).rejects.toMatchObject({ statusCode: 400 });
     expect(User.findOne).not.toHaveBeenCalled();

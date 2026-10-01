@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { EMAIL_REGEX } from '../utils/email.js';
 
 const addressSchema = new mongoose.Schema(
   {
@@ -37,7 +38,8 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      match: [/\S+@\S+\.\S+/, 'Iltimos, to‘g‘ri elektron pochta manzilini kiriting'],
+      maxlength: [254, 'Elektron pochta manzili juda uzun'],
+      match: [EMAIL_REGEX, 'Iltimos, to‘g‘ri elektron pochta manzilini kiriting'],
     },
     phone: {
       type: String,

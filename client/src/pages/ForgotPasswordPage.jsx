@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
           <div className="mb-8 text-center">
             <BrandLogo className="mx-auto h-12 w-auto max-w-[220px] text-[#1A1A1A]" />
             <h1 className="mt-2 font-['Playfair_Display'] text-2xl font-semibold text-[#1A1A1A]">Parolni tiklash</h1>
-            <p className="mt-2 font-['Inter'] text-sm leading-relaxed text-[#6B6B6B]">Hisobingizga bog‘langan emailni kiriting. Tiklash havolasini yuboramiz.</p>
+            <p className="mt-2 font-['Inter'] text-sm leading-relaxed text-[#6B6B6B]">Tasdiqlangan hisob emailiga tiklash havolasi yuboriladi. Email egasini Google’dan bevosita qidirib bo‘lmaydi — tasdiqlash havolasi pochta qutingizga keladi.</p>
           </div>
           {error && <p role="alert" className="mb-4 rounded-lg bg-red-50 px-4 py-3 font-['Inter'] text-sm text-red-700">{error}</p>}
           {message && <p role="status" className="mb-4 rounded-lg bg-[#F0F2E8] px-4 py-3 font-['Inter'] text-sm text-[#56642B]">{message}</p>}

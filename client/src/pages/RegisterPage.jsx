@@ -64,7 +64,7 @@ export default function RegisterPage() {
               Hisob yarating
             </h1>
             <p className="font-['Inter'] text-[14px] text-[#6B6B6B] mt-1">
-              Aura hamjamiyatiga qo'shiling
+              Email manzilingiz yuboriladigan kod bilan tasdiqlanadi.
             </p>
           </div>
 
@@ -97,6 +97,7 @@ export default function RegisterPage() {
                     id={`register-${name}`}
                     name={name}
                     type={type}
+                    maxLength={name === 'email' ? 254 : undefined}
                     autoComplete={{
                       name: 'given-name',
                       surname: 'family-name',

@@ -50,7 +50,7 @@ export default function LoginPage() {
               Hisobingizga kiring
             </h1>
             <p className="font-['Inter'] text-[14px] text-[#6B6B6B] mt-1">
-              Shaxsiy kabinetingizga xush kelibsiz
+              Tasdiqlangan email va parolingiz bilan kiring.
             </p>
           </div>
 
@@ -79,6 +79,7 @@ export default function LoginPage() {
                 name="email"
                 type="email"
                 required
+                maxLength={254}
                 value={form.email}
                 onChange={handleChange}
                 placeholder="siz@email.com"

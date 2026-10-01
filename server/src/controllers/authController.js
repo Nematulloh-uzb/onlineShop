@@ -16,6 +16,7 @@ import {
 } from '../utils/token.js';
 import { env } from '../config/env.js';
 import { isEmailConfigured, sendPasswordResetLink, sendVerificationCode } from '../services/emailService.js';
+import { isValidEmail, normalizeEmail } from '../utils/email.js';
 
 const hashVerificationCode = (code) => createHmac('sha256', env.JWT_ACCESS_SECRET).update(code).digest('hex');
 
@@ -53,11 +54,14 @@ export const register = catchAsync(async (req, res, next) => {
     return next(new ApiError(400, 'Ism, email va parol kiritilishi shart'));
   }
 
+  const normalizedEmail = normalizeEmail(email);
+  if (!isValidEmail(normalizedEmail)) {
+    return next(new ApiError(400, 'To‘g‘ri elektron pochta manzilini kiriting'));
+  }
+
   if (password.length < 8 || !/\d/.test(password) || !/[a-zA-Z]/.test(password)) {
     return next(new ApiError(400, 'Parol kamida 8 ta belgidan iborat bo‘lishi, kamida bitta harf va bitta raqamni o‘z ichiga olishi kerak'));
   }
-
-  const normalizedEmail = email.trim().toLowerCase();
 
   // Keep unit tests independent of external email delivery.
   if (!shouldRequireEmail()) {
@@ -116,7 +120,12 @@ export const verifyEmail = catchAsync(async (req, res, next) => {
     return next(new ApiError(400, 'Elektron pochta va 6 xonali tasdiqlash kodini kiriting'));
   }
 
-  const user = await User.findOne({ email: email.trim().toLowerCase() })
+  const normalizedEmail = normalizeEmail(email);
+  if (!isValidEmail(normalizedEmail)) {
+    return next(new ApiError(400, 'To‘g‘ri elektron pochta manzilini kiriting'));
+  }
+
+  const user = await User.findOne({ email: normalizedEmail })
     .select('+emailVerificationCodeHash +emailVerificationExpires +emailVerificationAttempts');
   if (!user || user.emailVerified || !user.emailVerificationCodeHash) {
     return next(new ApiError(400, 'Tasdiqlash kodi yaroqsiz yoki uning muddati o‘tgan'));
@@ -150,6 +159,10 @@ export const resendVerificationCode = catchAsync(async (req, res, next) => {
   if (typeof email !== 'string' || !email.trim()) {
     return next(new ApiError(400, 'Elektron pochta manzilini kiriting'));
   }
+  const normalizedEmail = normalizeEmail(email);
+  if (!isValidEmail(normalizedEmail)) {
+    return next(new ApiError(400, 'To‘g‘ri elektron pochta manzilini kiriting'));
+  }
   if (!shouldRequireEmail()) {
     return res.status(200).json({
       success: true,
@@ -159,7 +172,7 @@ export const resendVerificationCode = catchAsync(async (req, res, next) => {
   const configurationError = emailConfigurationError();
   if (configurationError) return next(configurationError);
 
-  const user = await User.findOne({ email: email.trim().toLowerCase() })
+  const user = await User.findOne({ email: normalizedEmail })
     .select('+emailVerificationCodeHash +emailVerificationExpires +emailVerificationAttempts');
   if (user && !user.emailVerified) {
     await issueVerificationCode(user);
@@ -178,7 +191,12 @@ export const login = catchAsync(async (req, res, next) => {
     return next(new ApiError(400, 'Elektron pochta va parolni kiriting'));
   }
 
-  const user = await User.findOne({ email: email.trim().toLowerCase() }).select('+passwordHash');
+  const normalizedEmail = normalizeEmail(email);
+  if (!isValidEmail(normalizedEmail)) {
+    return next(new ApiError(400, 'To‘g‘ri elektron pochta manzilini kiriting'));
+  }
+
+  const user = await User.findOne({ email: normalizedEmail }).select('+passwordHash');
   if (!user || !user.isActive) {
     return next(new ApiError(401, 'Elektron pochta yoki parol noto‘g‘ri'));
   }
@@ -295,6 +313,10 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
   if (typeof email !== 'string' || !email.trim()) {
     return next(new ApiError(400, 'Elektron pochta manzilini kiriting'));
   }
+  const normalizedEmail = normalizeEmail(email);
+  if (!isValidEmail(normalizedEmail)) {
+    return next(new ApiError(400, 'To‘g‘ri elektron pochta manzilini kiriting'));
+  }
 
   // Unit tests do not contact external mail providers.
   if (!shouldRequireEmail()) {
@@ -305,7 +327,7 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
     return next(configurationError);
   }
 
-  const user = await User.findOne({ email: email.trim().toLowerCase() })
+  const user = await User.findOne({ email: normalizedEmail })
     .select('+resetPasswordTokenHash +resetPasswordExpires');
 
   if (configurationError && env.NODE_ENV === 'development') {
