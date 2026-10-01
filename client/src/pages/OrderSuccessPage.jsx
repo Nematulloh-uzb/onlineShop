@@ -30,7 +30,7 @@ export default function OrderSuccessPage() {
   return (
     <>
       <Helmet>
-        <title>{order ? `Buyurtma ${order.orderNumber} — AURA` : 'Buyurtma — AURA'}</title>
+        <title>{order ? `Buyurtma ${order.orderNumber} — VERDE` : 'Buyurtma — VERDE'}</title>
       </Helmet>
 
       <main className="mx-auto flex min-h-[70vh] max-w-3xl items-center justify-center px-6 py-12">

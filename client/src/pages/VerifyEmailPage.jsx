@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api, getApiErrorMessage } from '../lib/api.js';
+import BrandLogo from '../components/UI/BrandLogo.jsx';
 
 export default function VerifyEmailPage() {
   const navigate = useNavigate();
@@ -45,11 +46,11 @@ export default function VerifyEmailPage() {
 
   return (
     <>
-      <Helmet><title>Emailni tasdiqlash — AURA</title></Helmet>
+      <Helmet><title>Emailni tasdiqlash — VERDE</title></Helmet>
       <div className="flex min-h-[80vh] items-center justify-center px-6 py-12">
         <section className="w-full max-w-md rounded-2xl bg-white p-8 shadow-[0_20px_40px_rgba(0,0,0,0.08)] sm:p-10">
           <div className="mb-8 text-center">
-            <span className="font-['Playfair_Display'] text-[28px] font-bold tracking-widest text-[#1A1A1A]">AURA</span>
+            <BrandLogo className="mx-auto h-12 w-auto max-w-[220px] text-[#1A1A1A]" />
             <h1 className="mt-2 font-['Playfair_Display'] text-2xl font-semibold text-[#1A1A1A]">Emailingizni tasdiqlang</h1>
             <p className="mt-2 font-['Inter'] text-sm leading-relaxed text-[#6B6B6B]">
               Elektron pochtangizga yuborilgan 6 xonali kodni kiriting. Kod 10 daqiqa amal qiladi.

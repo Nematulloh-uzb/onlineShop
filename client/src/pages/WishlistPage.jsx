@@ -24,7 +24,7 @@ export default function WishlistPage() {
   return (
     <>
       <Helmet>
-        <title>Istaklar ro‘yxati — AURA</title>
+        <title>Istaklar ro‘yxati — VERDE</title>
       </Helmet>
 
       <main className="mx-auto max-w-[1280px] px-6 py-10 md:px-10">

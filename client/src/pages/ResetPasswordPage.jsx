@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getApiErrorMessage } from '../lib/api.js';
 import PasswordInput from '../components/UI/PasswordInput.jsx';
+import BrandLogo from '../components/UI/BrandLogo.jsx';
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -33,11 +34,11 @@ export default function ResetPasswordPage() {
 
   return (
     <>
-      <Helmet><title>Yangi parol — AURA</title></Helmet>
+      <Helmet><title>Yangi parol — VERDE</title></Helmet>
       <div className="flex min-h-[80vh] items-center justify-center px-6 py-12">
         <section className="w-full max-w-md rounded-2xl bg-white p-8 shadow-[0_20px_40px_rgba(0,0,0,0.08)] sm:p-10">
           <div className="mb-8 text-center">
-            <span className="font-['Playfair_Display'] text-[28px] font-bold tracking-widest text-[#1A1A1A]">AURA</span>
+            <BrandLogo className="mx-auto h-12 w-auto max-w-[220px] text-[#1A1A1A]" />
             <h1 className="mt-2 font-['Playfair_Display'] text-2xl font-semibold text-[#1A1A1A]">Yangi parol yarating</h1>
             <p className="mt-2 font-['Inter'] text-sm text-[#6B6B6B]">Parol kamida 8 belgi, harf va raqamdan iborat bo‘lsin.</p>
           </div>

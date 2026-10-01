@@ -5,7 +5,7 @@ export default function NotFoundPage() {
   return (
     <>
       <Helmet>
-        <title>404 — AURA</title>
+        <title>404 — VERDE</title>
       </Helmet>
 
       <div className="min-h-[80vh] flex items-center justify-center px-6 text-center">

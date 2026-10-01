@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getApiErrorMessage } from '../lib/api.js';
 import PasswordInput from '../components/UI/PasswordInput.jsx';
+import BrandLogo from '../components/UI/BrandLogo.jsx';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -38,15 +39,13 @@ export default function LoginPage() {
   return (
     <>
       <Helmet>
-        <title>Kirish — AURA</title>
+        <title>Kirish — VERDE</title>
       </Helmet>
 
       <div className="min-h-[80vh] flex items-center justify-center px-6 py-12">
         <div className="bg-white rounded-2xl p-10 shadow-[0_20px_40px_rgba(0,0,0,0.08)] w-full max-w-md">
           <div className="text-center mb-8">
-            <span className="font-['Playfair_Display'] text-[28px] font-bold tracking-widest uppercase text-[#1A1A1A]">
-              AURA
-            </span>
+            <BrandLogo className="mx-auto h-12 w-auto max-w-[220px] text-[#1A1A1A]" />
             <h1 className="font-['Playfair_Display'] text-[24px] font-semibold text-[#1A1A1A] mt-2">
               Hisobingizga kiring
             </h1>

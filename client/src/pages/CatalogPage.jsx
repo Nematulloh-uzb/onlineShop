@@ -94,14 +94,14 @@ export default function CatalogPage() {
   return (
     <>
       <Helmet>
-        <title>{activeFilter === 'Barchasi' ? 'Katalog' : activeFilter} — AURA</title>
-        <meta name="description" content="AURA erkaklar kiyimi va aksessuarlari: zamonaviy uslub, puxta materiallar va o‘ylangan tanlov." />
+        <title>{activeFilter === 'Barchasi' ? 'Katalog' : activeFilter} — VERDE</title>
+        <meta name="description" content="VERDE erkaklar kiyimi va aksessuarlari: zamonaviy uslub, puxta materiallar va o‘ylangan tanlov." />
       </Helmet>
 
       <div className="mx-auto max-w-[1280px] px-6 py-10 md:px-10">
         <div className="mb-8">
           <span className="mb-2 block font-['Inter'] text-xs font-semibold uppercase tracking-widest text-[#8A9A5B]">
-            AURA KOLLEKSIYASI
+            VERDE KOLLEKSIYASI
           </span>
           <h1 className="font-['Playfair_Display'] text-4xl font-bold leading-tight text-[#1A1A1A] md:text-5xl">
             {activeFilter === 'Barchasi' ? 'Barcha mahsulotlar' : activeFilter}
