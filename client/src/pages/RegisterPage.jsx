@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getApiErrorMessage } from '../lib/api.js';
+import PasswordInput from '../components/UI/PasswordInput.jsx';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -80,24 +81,35 @@ export default function RegisterPage() {
                 <label htmlFor={`register-${name}`} className="font-['Inter'] text-[13px] font-semibold text-[#1A1A1A] block mb-1">
                   {label}
                 </label>
-                <input
-                  id={`register-${name}`}
-                  name={name}
-                  type={type}
-                  autoComplete={{
-                    name: 'given-name',
-                    surname: 'family-name',
-                    email: 'email',
-                    password: 'new-password',
-                    confirm: 'new-password',
-                  }[name]}
-                  minLength={type === 'password' ? 8 : undefined}
-                  required
-                  value={form[name]}
-                  onChange={handleChange}
-                  placeholder={placeholder}
-                  className="w-full h-12 px-4 rounded-lg border border-[#E5E5E5] font-['Inter'] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#8A9A5B] transition-all"
-                />
+                {type === 'password' ? (
+                  <PasswordInput
+                    id={`register-${name}`}
+                    name={name}
+                    autoComplete={name === 'password' ? 'new-password' : 'new-password'}
+                    minLength={8}
+                    required
+                    value={form[name]}
+                    onChange={handleChange}
+                    placeholder={placeholder}
+                    className="h-12 w-full rounded-lg border border-[#E5E5E5] px-4 font-['Inter'] text-[14px] transition-all focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]"
+                  />
+                ) : (
+                  <input
+                    id={`register-${name}`}
+                    name={name}
+                    type={type}
+                    autoComplete={{
+                      name: 'given-name',
+                      surname: 'family-name',
+                      email: 'email',
+                    }[name]}
+                    required
+                    value={form[name]}
+                    onChange={handleChange}
+                    placeholder={placeholder}
+                    className="h-12 w-full rounded-lg border border-[#E5E5E5] px-4 font-['Inter'] text-[14px] transition-all focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]"
+                  />
+                )}
               </div>
             ))}
 

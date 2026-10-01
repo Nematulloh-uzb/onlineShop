@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getApiErrorMessage } from '../lib/api.js';
+import PasswordInput from '../components/UI/PasswordInput.jsx';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -94,16 +95,15 @@ export default function LoginPage() {
                   Parolni unutdingizmi?
                 </Link>
               </div>
-              <input
+              <PasswordInput
                 id="login-password"
                 autoComplete="current-password"
                 name="password"
-                type="password"
                 required
                 value={form.password}
                 onChange={handleChange}
                 placeholder="••••••••"
-                className="w-full h-12 px-4 rounded-lg border border-[#E5E5E5] font-['Inter'] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#8A9A5B] transition-all"
+                className="h-12 w-full rounded-lg border border-[#E5E5E5] px-4 font-['Inter'] text-[14px] transition-all focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]"
               />
             </div>
 

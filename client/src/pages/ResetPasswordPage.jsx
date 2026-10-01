@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getApiErrorMessage } from '../lib/api.js';
+import PasswordInput from '../components/UI/PasswordInput.jsx';
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -48,7 +49,7 @@ export default function ResetPasswordPage() {
             ].map(([name, label, autoComplete]) => (
               <div key={name}>
                 <label htmlFor={`reset-${name}`} className="mb-1 block font-['Inter'] text-sm font-semibold text-[#1A1A1A]">{label}</label>
-                <input id={`reset-${name}`} type="password" autoComplete={autoComplete} minLength={8} required value={form[name]} onChange={(event) => setForm((current) => ({ ...current, [name]: event.target.value }))} className="h-12 w-full rounded-lg border border-[#E5E5E5] px-4 font-['Inter'] text-sm focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]" />
+                <PasswordInput id={`reset-${name}`} autoComplete={autoComplete} minLength={8} required value={form[name]} onChange={(event) => setForm((current) => ({ ...current, [name]: event.target.value }))} className="h-12 w-full rounded-lg border border-[#E5E5E5] px-4 font-['Inter'] text-sm focus:outline-none focus:ring-2 focus:ring-[#8A9A5B]" />
               </div>
             ))}
             <button type="submit" disabled={loading} className="mt-2 h-12 rounded-lg bg-[#8A9A5B] font-['Inter'] text-sm font-semibold text-white transition-colors hover:bg-[#6E7A47] disabled:opacity-60">
