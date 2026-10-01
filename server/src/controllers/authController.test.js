@@ -92,6 +92,22 @@ describe('authentication and refresh sessions', () => {
     expect(User.findOne).not.toHaveBeenCalled();
   });
 
+  test('does not issue a development reset link for an email without an eligible database account', async () => {
+    User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(null) });
+    const originalNodeEnv = env.NODE_ENV;
+    env.NODE_ENV = 'development';
+    isEmailConfigured.mockReturnValue(false);
+
+    try {
+      const result = await invoke(forgotPassword, { body: { email: 'missing@example.com' } });
+      expect(User.findOne).toHaveBeenCalledWith({ email: 'missing@example.com' });
+      expect(result.body.data).toBeUndefined();
+      expect(result.body.message).toMatch(/Agar bu manzil bilan faol va tasdiqlangan hisob mavjud bo‘lsa/);
+    } finally {
+      env.NODE_ENV = originalNodeEnv;
+    }
+  });
+
   test('rejects malformed registration payloads as client errors', async () => {
     await expect(invoke(register, { body: null })).rejects.toMatchObject({ statusCode: 400 });
     expect(User.findOne).not.toHaveBeenCalled();

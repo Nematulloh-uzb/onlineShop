@@ -86,14 +86,14 @@ export const register = catchAsync(async (req, res, next) => {
     return;
   }
 
-  const configurationError = emailConfigurationError();
-  if (configurationError) return next(configurationError);
-
   let existingUser = await User.findOne({ email: normalizedEmail })
     .select('+emailVerificationCodeHash +emailVerificationExpires +emailVerificationAttempts');
   if (existingUser && existingUser.emailVerified !== false) {
     return next(new ApiError(409, 'Ushbu elektron pochta manzili allaqachon ro‘yxatdan o‘tgan'));
   }
+
+  const configurationError = emailConfigurationError();
+  if (configurationError) return next(configurationError);
 
   const user = existingUser || await User.create({
     name: name.trim(),
@@ -336,14 +336,18 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
       user.resetPasswordTokenHash = createHash('sha256').update(token).digest('hex');
       user.resetPasswordExpires = new Date(Date.now() + 30 * 60 * 1000);
       await user.save();
+      return res.status(200).json({
+        success: true,
+        message: 'Lokal sinov havolasi tayyor. Bu havola emailga yuborilmadi va faqat development muhitida ko‘rsatiladi.',
+        data: {
+          developmentResetUrl: `${env.CLIENT_URL.replace(/\/$/, '')}/parolni-tiklash/${encodeURIComponent(token)}`,
+        },
+      });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Lokal sinov havolasi tayyor. Bu havola emailga yuborilmadi va faqat development muhitida ko‘rsatiladi.',
-      data: {
-        developmentResetUrl: `${env.CLIENT_URL.replace(/\/$/, '')}/parolni-tiklash/${encodeURIComponent(token)}`,
-      },
+      message: 'Agar bu manzil bilan faol va tasdiqlangan hisob mavjud bo‘lsa, tiklash havolasi yuborildi.',
     });
   }
 

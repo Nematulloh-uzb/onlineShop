@@ -29,7 +29,7 @@ const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => (
 const sendEmail = async ({ to, subject, text, html }) => {
   try {
     await getTransport().sendMail({
-      from: env.SMTP_FROM || `AURA <${env.SMTP_USER}>`,
+      from: env.SMTP_FROM || `VERDE <${env.SMTP_USER}>`,
       to,
       subject,
       text,
@@ -55,9 +55,9 @@ export const sendVerificationCode = ({ email, name, code }) => {
   const safeName = escapeHtml(name);
   return sendEmail({
     to: email,
-    subject: 'AURA hisobini tasdiqlash kodi',
-    text: `Salom, ${name}. AURA hisobingizni tasdiqlash kodi: ${code}. Kod 10 daqiqa amal qiladi.`,
-    html: `<p>Salom, ${safeName}.</p><p>AURA hisobingizni tasdiqlash uchun ushbu kodni kiriting:</p><p style="font-size:28px;font-weight:bold;letter-spacing:8px">${code}</p><p>Kod 10 daqiqa amal qiladi. Agar bu so‘rovni siz yubormagan bo‘lsangiz, xatni e’tiborsiz qoldiring.</p>`,
+    subject: 'VERDE hisobini tasdiqlash kodi',
+    text: `Salom, ${name}. VERDE hisobingizni tasdiqlash kodi: ${code}. Kod 10 daqiqa amal qiladi.`,
+    html: `<p>Salom, ${safeName}.</p><p>VERDE hisobingizni tasdiqlash uchun ushbu kodni kiriting:</p><p style="font-size:28px;font-weight:bold;letter-spacing:8px">${code}</p><p>Kod 10 daqiqa amal qiladi. Agar bu so‘rovni siz yubormagan bo‘lsangiz, xatni e’tiborsiz qoldiring.</p>`,
   });
 };
 
@@ -66,8 +66,8 @@ export const sendPasswordResetLink = ({ email, name, token }) => {
   const resetUrl = `${env.CLIENT_URL.replace(/\/$/, '')}/parolni-tiklash/${encodeURIComponent(token)}`;
   return sendEmail({
     to: email,
-    subject: 'AURA parolini tiklash',
-    text: `Salom, ${name}. Parolni tiklash uchun ushbu havolani oching: ${resetUrl}. Havola 30 daqiqa amal qiladi.`,
-    html: `<p>Salom, ${safeName}.</p><p>AURA hisobingiz parolini tiklash uchun quyidagi havolani oching. Havola 30 daqiqa amal qiladi:</p><p><a href="${escapeHtml(resetUrl)}">Parolni tiklash</a></p><p>Agar bu so‘rovni siz yubormagan bo‘lsangiz, xatni e’tiborsiz qoldiring.</p>`,
+    subject: 'VERDE parolini tiklash',
+    text: `Salom, ${name}. VERDE parolini tiklash uchun ushbu havolani oching: ${resetUrl}. Havola 30 daqiqa amal qiladi.`,
+    html: `<p>Salom, ${safeName}.</p><p>VERDE hisobingiz parolini tiklash uchun quyidagi havolani oching. Havola 30 daqiqa amal qiladi:</p><p><a href="${escapeHtml(resetUrl)}">Parolni tiklash</a></p><p>Agar bu so‘rovni siz yubormagan bo‘lsangiz, xatni e’tiborsiz qoldiring.</p>`,
   });
 };
