@@ -244,6 +244,23 @@ describe('authentication and refresh sessions', () => {
     }
   });
 
+  test('returns a clear SMTP configuration error without creating reset state', async () => {
+    const originalNodeEnv = env.NODE_ENV;
+    env.NODE_ENV = 'development';
+    isEmailConfigured.mockReturnValue(false);
+
+    try {
+      await expect(invoke(forgotPassword, { body: { email: 'ada@example.com' } }))
+        .rejects.toMatchObject({
+          statusCode: 503,
+          message: expect.stringContaining('SMTP_USER (Gmail manzili)'),
+        });
+      expect(User.findOne).not.toHaveBeenCalled();
+    } finally {
+      env.NODE_ENV = originalNodeEnv;
+    }
+  });
+
   test('reset password only finds a matching, unexpired token hash', async () => {
     const token = 'cryptographically-generated-reset-token';
     const tokenHash = createHash('sha256').update(token).digest('hex');

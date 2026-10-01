@@ -5,7 +5,7 @@ const isConfigured = () => Boolean(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PA
 
 const getTransport = () => {
   if (!isConfigured()) {
-    const error = new Error('Email yuborish sozlanmagan. SMTP_USER va SMTP_PASS ni server .env faylida kiriting.');
+    const error = new Error('Email yuborilmadi: Gmail SMTP sozlanmagan. Lokal ishga tushirishda server/.env, Dockerda loyiha boshidagi .env fayliga SMTP_USER (Gmail manzili) va SMTP_PASS (Google App Password) kiriting, so‘ng serverni qayta ishga tushiring.');
     error.code = 'EMAIL_NOT_CONFIGURED';
     throw error;
   }
@@ -43,7 +43,7 @@ const sendEmail = async ({ to, subject, text, html }) => {
     }
 
     console.error('[Email] Xat yuborilmadi:', error);
-    const deliveryError = new Error('Email yuborilmadi. Gmail SMTP sozlamalarini tekshirib, qayta urinib ko‘ring.');
+    const deliveryError = new Error('Email yuborilmadi. Gmail manzili, Google App Password, SMTP_HOST/PORT sozlamalari va internet aloqasini tekshirib, qayta urinib ko‘ring.');
     deliveryError.statusCode = 503;
     throw deliveryError;
   }

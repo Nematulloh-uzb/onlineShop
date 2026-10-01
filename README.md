@@ -28,12 +28,14 @@ npm run test:server
 npm run build --prefix client
 ```
 
-## Email verification and password recovery
+## Email tasdiqlash va parolni tiklash
 
-Registration requires a working SMTP configuration. For Gmail, enable 2-Step Verification
-and create an App Password for the server; do not use your Google account password.
-Set the following in `server/.env` for local development or in the root `.env` for Docker.
-Keep these values private:
+Ro‘yxatdan o‘tish va parolni tiklash email yuborish uchun Gmail SMTP talab qiladi.
+Google hisobingizda 2 bosqichli himoyani yoqing, so‘ng Google Account → Xavfsizlik →
+2 bosqichli himoya → Ilova parollari bo‘limidan server uchun App Password yarating.
+Oddiy Gmail parolingizni ishlatmang. App Password’ni chatga yoki repoga yubormang.
+Lokal ishga tushirishda quyidagi sozlamalarni `server/.env` fayliga, Docker ishlatilganda
+loyiha boshidagi `.env` fayliga kiriting:
 
 ```dotenv
 SMTP_HOST=smtp.gmail.com
@@ -44,10 +46,11 @@ SMTP_PASS=your-16-character-app-password
 SMTP_FROM=AURA <your-address@gmail.com>
 ```
 
-New accounts receive a six-digit code that expires after 10 minutes. The account cannot
-sign in until the code is verified. Password recovery sends a single-use link that expires
-after 30 minutes. Without SMTP credentials, registration and email actions return an explicit
-configuration error rather than pretending that a message was sent.
+`SMTP_FROM` qiymatini `SMTP_USER` dagi Gmail manziliga moslang yoki qoldirib keting.
+Sozlamalarni saqlagach serverni qayta ishga tushiring. Yangi hisobga 10 daqiqada eskiradigan
+6 xonali kod yuboriladi; email tasdiqlanmaguncha tizimga kirib bo‘lmaydi. Parolni tiklash
+havolasi bir martalik va 30 daqiqada eskiradi. SMTP sozlanmagan yoki email yuborish
+muvaffaqiyatsiz bo‘lsa, API aniq xato qaytaradi va email yuborilgandek ko‘rsatmaydi.
 
 ## Production deployment
 
