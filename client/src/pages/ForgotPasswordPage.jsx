@@ -8,15 +8,18 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [developmentResetUrl, setDevelopmentResetUrl] = useState('');
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
     setError('');
     setMessage('');
+    setDevelopmentResetUrl('');
     try {
       const { data } = await api.post('/auth/forgot-password', { email: email.trim().toLowerCase() });
       setMessage(data.message);
+      setDevelopmentResetUrl(data.data?.developmentResetUrl || '');
     } catch (requestError) {
       setError(getApiErrorMessage(requestError, 'Parolni tiklash so‘rovi yuborilmadi. Qayta urinib ko‘ring.'));
     } finally {
@@ -36,6 +39,14 @@ export default function ForgotPasswordPage() {
           </div>
           {error && <p role="alert" className="mb-4 rounded-lg bg-red-50 px-4 py-3 font-['Inter'] text-sm text-red-700">{error}</p>}
           {message && <p role="status" className="mb-4 rounded-lg bg-[#F0F2E8] px-4 py-3 font-['Inter'] text-sm text-[#56642B]">{message}</p>}
+          {developmentResetUrl && (
+            <a
+              href={developmentResetUrl}
+              className="mb-4 flex min-h-12 items-center justify-center rounded-lg border border-[#8A9A5B] px-4 text-center font-['Inter'] text-sm font-semibold text-[#56642B] transition-colors hover:bg-[#F0F2E8]"
+            >
+              Lokal sinov havolasini ochish
+            </a>
+          )}
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
               <label htmlFor="forgot-email" className="mb-1 block font-['Inter'] text-sm font-semibold text-[#1A1A1A]">Elektron pochta</label>

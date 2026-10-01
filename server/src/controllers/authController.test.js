@@ -246,7 +246,7 @@ describe('authentication and refresh sessions', () => {
 
   test('returns a clear SMTP configuration error without creating reset state', async () => {
     const originalNodeEnv = env.NODE_ENV;
-    env.NODE_ENV = 'development';
+    env.NODE_ENV = 'production';
     isEmailConfigured.mockReturnValue(false);
 
     try {
@@ -256,6 +256,28 @@ describe('authentication and refresh sessions', () => {
           message: expect.stringContaining('SMTP_USER (Gmail manzili)'),
         });
       expect(User.findOne).not.toHaveBeenCalled();
+    } finally {
+      env.NODE_ENV = originalNodeEnv;
+    }
+  });
+
+  test('provides a working reset link in development when SMTP is not configured', async () => {
+    const user = makeUser({ emailVerified: true });
+    User.findOne.mockReturnValue({ select: jest.fn().mockResolvedValue(user) });
+    const originalNodeEnv = env.NODE_ENV;
+    env.NODE_ENV = 'development';
+    isEmailConfigured.mockReturnValue(false);
+
+    try {
+      const result = await invoke(forgotPassword, { body: { email: user.email } });
+      const resetUrl = new URL(result.body.data.developmentResetUrl);
+      const token = resetUrl.pathname.split('/').pop();
+
+      expect(resetUrl.origin).toBe(env.CLIENT_URL);
+      expect(user.resetPasswordTokenHash).toBe(createHash('sha256').update(token).digest('hex'));
+      expect(user.resetPasswordExpires.getTime()).toBeGreaterThan(Date.now());
+      expect(result.body.message).toMatch(/Lokal sinov havolasi tayyor/);
+      expect(sendPasswordResetLink).not.toHaveBeenCalled();
     } finally {
       env.NODE_ENV = originalNodeEnv;
     }

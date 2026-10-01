@@ -301,10 +301,32 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
     return next(new ApiError(503, 'Parolni tiklash xizmati hozircha mavjud emas'));
   }
   const configurationError = emailConfigurationError();
-  if (configurationError) return next(configurationError);
-
   const user = await User.findOne({ email: email.trim().toLowerCase() })
     .select('+resetPasswordTokenHash +resetPasswordExpires');
+
+  if (configurationError && env.NODE_ENV !== 'development') {
+    return next(configurationError);
+  }
+
+  if (configurationError && env.NODE_ENV === 'development') {
+    const token = randomBytes(32).toString('hex');
+    if (user && user.isActive && user.emailVerified !== false) {
+      user.resetPasswordTokenHash = createHash('sha256').update(token).digest('hex');
+      user.resetPasswordExpires = new Date(Date.now() + 30 * 60 * 1000);
+      await user.save();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: user && user.isActive && user.emailVerified !== false
+        ? 'Lokal sinov havolasi tayyor. Bu havola emailga yuborilmadi va faqat development muhitida ko‘rsatiladi.'
+        : 'Agar bu manzil bilan faol hisob mavjud bo‘lsa, parolni tiklash yo‘li tayyorlandi.',
+      data: {
+        developmentResetUrl: `${env.CLIENT_URL.replace(/\/$/, '')}/parolni-tiklash/${encodeURIComponent(token)}`,
+      },
+    });
+  }
+
   if (user && user.isActive && user.emailVerified !== false) {
     const token = randomBytes(32).toString('hex');
     user.resetPasswordTokenHash = createHash('sha256').update(token).digest('hex');

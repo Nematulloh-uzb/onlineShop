@@ -51,6 +51,9 @@ Sozlamalarni saqlagach serverni qayta ishga tushiring. Yangi hisobga 10 daqiqada
 6 xonali kod yuboriladi; email tasdiqlanmaguncha tizimga kirib bo‘lmaydi. Parolni tiklash
 havolasi bir martalik va 30 daqiqada eskiradi. SMTP sozlanmagan yoki email yuborish
 muvaffaqiyatsiz bo‘lsa, API aniq xato qaytaradi va email yuborilgandek ko‘rsatmaydi.
+Lokal `development` muhitida SMTP sozlanmagan bo‘lsa, tiklash emailga yuborilmaydi; uning
+o‘rniga faqat shu muhitdagi sahifada sinov uchun havola ko‘rsatiladi. Bu imkoniyat production’da
+o‘chirilgan, u yerda SMTP sozlanishi shart.
 
 ## Production deployment
 
