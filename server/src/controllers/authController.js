@@ -301,12 +301,12 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
     return next(new ApiError(503, 'Parolni tiklash xizmati hozircha mavjud emas'));
   }
   const configurationError = emailConfigurationError();
-  const user = await User.findOne({ email: email.trim().toLowerCase() })
-    .select('+resetPasswordTokenHash +resetPasswordExpires');
-
   if (configurationError && env.NODE_ENV !== 'development') {
     return next(configurationError);
   }
+
+  const user = await User.findOne({ email: email.trim().toLowerCase() })
+    .select('+resetPasswordTokenHash +resetPasswordExpires');
 
   if (configurationError && env.NODE_ENV === 'development') {
     const token = randomBytes(32).toString('hex');
@@ -318,9 +318,7 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: user && user.isActive && user.emailVerified !== false
-        ? 'Lokal sinov havolasi tayyor. Bu havola emailga yuborilmadi va faqat development muhitida ko‘rsatiladi.'
-        : 'Agar bu manzil bilan faol hisob mavjud bo‘lsa, parolni tiklash yo‘li tayyorlandi.',
+      message: 'Lokal sinov havolasi tayyor. Bu havola emailga yuborilmadi va faqat development muhitida ko‘rsatiladi.',
       data: {
         developmentResetUrl: `${env.CLIENT_URL.replace(/\/$/, '')}/parolni-tiklash/${encodeURIComponent(token)}`,
       },
