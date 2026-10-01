@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import BrandLogo from '../UI/BrandLogo.jsx';
 
 const currentYear = new Date().getFullYear();
 
@@ -8,12 +9,11 @@ export default function Footer() {
       <div className="mx-auto max-w-[1280px] px-6 md:px-10">
         <div className="grid grid-cols-1 gap-10 border-b border-white/10 pb-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2">
-            <Link to="/" className="font-['Playfair_Display'] text-2xl font-semibold tracking-[0.2em]">
-              AURA
+            <Link to="/" aria-label="AURA Eco Atelier bosh sahifa" className="inline-flex">
+              <BrandLogo className="h-12 w-auto max-w-[196px] text-white" />
             </Link>
             <p className="mt-4 max-w-sm font-['Inter'] text-sm leading-relaxed text-white/65">
-              Kundalik hayot uchun puxta tanlangan materiallar va o‘ylangan dizayn.
-              Har bir mahsulot sahifasida tarkib, kelib chiqish va parvarish ma’lumotlari.
+              ECO ATELIER — tabiiy materiallar va o‘ylangan dizayn uyg‘unligida yaratilgan erkaklar uslubi.
             </p>
           </div>
 

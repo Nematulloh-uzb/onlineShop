@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { api } from '../../lib/api.js';
+import BrandLogo from '../UI/BrandLogo.jsx';
 import ProfileAvatar from '../UI/ProfileAvatar.jsx';
 
 export default function Header() {
@@ -45,14 +46,8 @@ export default function Header() {
       }`}
     >
       <div className="h-20 max-w-[1280px] mx-auto px-6 md:px-10 flex items-center justify-between gap-4">
-        {/* Logo */}
-        <Link to="/" aria-label="AURA bosh sahifa" className="flex shrink-0 items-center group">
-          <img
-            src="/logo.svg"
-            alt="AURA"
-            className="h-8 w-auto max-w-[128px] object-contain transition-transform group-hover:scale-105"
-            onError={(e) => { e.target.style.display = 'none'; }}
-          />
+        <Link to="/" aria-label="AURA Eco Atelier bosh sahifa" className="group flex shrink-0 items-center">
+          <BrandLogo className="h-10 w-auto max-w-[164px] text-[#1A1A1A] transition-transform group-hover:scale-105" />
         </Link>
 
         {/* Desktop Nav */}
