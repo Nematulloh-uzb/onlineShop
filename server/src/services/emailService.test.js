@@ -28,7 +28,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   emailEnv.SMTP_USER = '';
   emailEnv.SMTP_PASS = '';
-  sendMail.mockResolvedValue({ messageId: 'test-message' });
+  sendMail.mockResolvedValue({ messageId: 'test-message', accepted: ['user@example.com'] });
 });
 
 describe('email delivery configuration', () => {
@@ -43,6 +43,7 @@ describe('email delivery configuration', () => {
 
   test('returns 503 and never creates a mail transport when credentials are missing', async () => {
     expect(getMissingEmailSettings()).toEqual(['SMTP_USER', 'SMTP_PASS']);
+    const consoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
     await expect(sendVerificationCode({
       email: 'user@example.com',
       name: 'Foydalanuvchi',
@@ -51,8 +52,12 @@ describe('email delivery configuration', () => {
       statusCode: 503,
       message: 'Elektron xat yuborish xizmati sozlanmagan.',
     });
+    expect(consoleWarn).toHaveBeenCalledWith(
+      '[Email] SMTP sozlamalari yetishmayapti: SMTP_USER, SMTP_PASS',
+    );
     expect(createTransport).not.toHaveBeenCalled();
     expect(sendMail).not.toHaveBeenCalled();
+    consoleWarn.mockRestore();
   });
 
   test('does not include SMTP error details or credentials in delivery logs', async () => {
@@ -104,5 +109,20 @@ describe('email delivery configuration', () => {
       text: expect.stringContaining('123456'),
       html: expect.stringContaining('123456'),
     }));
+  });
+
+  test('returns 503 when SMTP accepts the request but rejects its recipient', async () => {
+    emailEnv.SMTP_USER = 'sender@gmail.com';
+    emailEnv.SMTP_PASS = 'app-password';
+    sendMail.mockResolvedValue({ messageId: 'test-message', accepted: [], rejected: ['user@example.com'] });
+
+    await expect(sendPasswordResetLink({
+      email: 'user@example.com',
+      name: 'Dilshod',
+      token: 'one-time-token',
+    })).rejects.toMatchObject({
+      statusCode: 503,
+      message: 'Elektron xat yuborilmadi. Birozdan so‘ng qayta urinib ko‘ring yoki sayt ma’muriga murojaat qiling.',
+    });
   });
 });

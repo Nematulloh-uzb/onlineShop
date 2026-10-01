@@ -8,7 +8,9 @@ export const getMissingEmailSettings = () => (
 const isConfigured = () => getMissingEmailSettings().length === 0;
 
 const getTransport = () => {
-  if (!isConfigured()) {
+  const missingSettings = getMissingEmailSettings();
+  if (missingSettings.length > 0) {
+    console.warn(`[Email] SMTP sozlamalari yetishmayapti: ${missingSettings.join(', ')}`);
     const error = new Error('Elektron xat yuborish xizmati sozlanmagan.');
     error.code = 'EMAIL_NOT_CONFIGURED';
     throw error;
@@ -69,13 +71,25 @@ const logEmailFailure = (error) => {
 
 const sendEmail = async ({ to, subject, text, html }) => {
   try {
-    await getTransport().sendMail({
+    const result = await getTransport().sendMail({
       from: env.SMTP_FROM || `VERDE <${env.SMTP_USER}>`,
       to,
       subject,
       text,
       html,
     });
+    const acceptedRecipients = Array.isArray(result.accepted)
+      ? result.accepted.map((recipient) => (
+        typeof recipient === 'string' ? recipient : recipient?.address
+      ))
+      : [];
+    if (!acceptedRecipients.some((recipient) => (
+      typeof recipient === 'string' && recipient.toLowerCase() === to.trim().toLowerCase()
+    ))) {
+      const rejectionError = new Error('SMTP xizmati xatni qabul qilmadi.');
+      rejectionError.code = 'EMAIL_RECIPIENT_REJECTED';
+      throw rejectionError;
+    }
   } catch (error) {
     if (error.code === 'EMAIL_NOT_CONFIGURED') {
       const configurationError = new Error(error.message);
