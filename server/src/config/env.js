@@ -1,5 +1,7 @@
 import dotenv from 'dotenv';
-dotenv.config();
+import { fileURLToPath } from 'node:url';
+
+dotenv.config({ path: fileURLToPath(new URL('../../.env', import.meta.url)) });
 
 const developmentAccessSecret = 'aura_eco_luxury_super_secret_access_jwt_key_2026';
 const developmentRefreshSecret = 'aura_eco_luxury_super_secret_refresh_jwt_key_2026';

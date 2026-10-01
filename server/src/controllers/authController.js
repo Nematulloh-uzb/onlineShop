@@ -15,20 +15,26 @@ import {
   sendTokenResponse,
 } from '../utils/token.js';
 import { env } from '../config/env.js';
-import { isEmailConfigured, sendPasswordResetLink, sendVerificationCode } from '../services/emailService.js';
+import {
+  getMissingEmailSettings,
+  isEmailConfigured,
+  sendPasswordResetLink,
+  sendVerificationCode,
+} from '../services/emailService.js';
 import { isValidEmail, normalizeEmail } from '../utils/email.js';
 
 const hashVerificationCode = (code) => createHmac('sha256', env.JWT_ACCESS_SECRET).update(code).digest('hex');
 
 const shouldRequireEmail = () => env.NODE_ENV !== 'test';
-const emailConfigurationError = () => (
-  isEmailConfigured()
-    ? null
-    : new ApiError(
-      503,
-      'Saytning xat yuborish xizmati hali sozlanmagan. Keyinroq urinib ko‘ring yoki sayt ma’muriga murojaat qiling.',
-    )
-);
+const emailConfigurationError = () => {
+  if (isEmailConfigured()) return null;
+
+  console.error(`[Email] Gmail yuborish sozlamalari kiritilmagan: ${getMissingEmailSettings().join(', ')}`);
+  return new ApiError(
+    503,
+    'Saytning xat yuborish xizmati hali sozlanmagan. Keyinroq urinib ko‘ring yoki sayt ma’muriga murojaat qiling.',
+  );
+};
 
 const issueVerificationCode = async (user) => {
   const code = String(randomInt(100000, 1000000));

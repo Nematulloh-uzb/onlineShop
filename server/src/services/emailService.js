@@ -1,7 +1,11 @@
 import nodemailer from 'nodemailer';
 import { env } from '../config/env.js';
 
-const isConfigured = () => Boolean(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS);
+export const getMissingEmailSettings = () => (
+  ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS'].filter((name) => !env[name]?.trim())
+);
+
+const isConfigured = () => getMissingEmailSettings().length === 0;
 
 const getTransport = () => {
   if (!isConfigured()) {

@@ -7,6 +7,7 @@ const findById = jest.fn();
 const create = jest.fn();
 const updateOne = jest.fn();
 const isEmailConfigured = jest.fn(() => true);
+const getMissingEmailSettings = jest.fn(() => []);
 const sendPasswordResetLink = jest.fn().mockResolvedValue(undefined);
 const sendVerificationCode = jest.fn().mockResolvedValue(undefined);
 
@@ -14,6 +15,7 @@ jest.unstable_mockModule('../models/User.js', () => ({
   User: { findOne, findById, create, updateOne },
 }));
 jest.unstable_mockModule('../services/emailService.js', () => ({
+  getMissingEmailSettings,
   isEmailConfigured,
   sendPasswordResetLink,
   sendVerificationCode,
@@ -72,6 +74,7 @@ const invoke = (handler, req) => new Promise((resolve, reject) => {
 beforeEach(() => {
   jest.clearAllMocks();
   isEmailConfigured.mockReturnValue(true);
+  getMissingEmailSettings.mockReturnValue([]);
   sendPasswordResetLink.mockResolvedValue(undefined);
   sendVerificationCode.mockResolvedValue(undefined);
 });
