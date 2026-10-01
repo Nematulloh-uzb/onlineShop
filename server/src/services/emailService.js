@@ -84,14 +84,14 @@ const sendEmail = async ({ to, subject, text, html }) => {
       ))
       : [];
     if (!acceptedRecipients.some((recipient) => (
-      typeof recipient === 'string' && recipient.toLowerCase() === to.trim().toLowerCase()
+      typeof recipient === 'string' && recipient.trim().toLowerCase() === to.trim().toLowerCase()
     ))) {
       const rejectionError = new Error('SMTP xizmati xatni qabul qilmadi.');
       rejectionError.code = 'EMAIL_RECIPIENT_REJECTED';
       throw rejectionError;
     }
   } catch (error) {
-    if (error.code === 'EMAIL_NOT_CONFIGURED') {
+    if (error?.code === 'EMAIL_NOT_CONFIGURED') {
       const configurationError = new Error(error.message);
       configurationError.statusCode = 503;
       throw configurationError;
