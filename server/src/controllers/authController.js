@@ -353,7 +353,7 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
   }
   res.status(200).json({
     success: true,
-    message: env.NODE_ENV === 'development'
+    message: env.NODE_ENV === 'development' && !isEmailConfigured()
       ? 'Agar bu manzil bilan hisob mavjud bo‘lsa, parolni tiklash havolasi server terminaliga chiqarildi.'
       : 'Agar bu manzil bilan hisob mavjud bo‘lsa, parolni tiklash havolasi yuborildi.',
   });
