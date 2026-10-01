@@ -26,7 +26,7 @@ const emailConfigurationError = () => (
     ? null
     : new ApiError(
       503,
-      'Hozircha elektron xat yuborib bo‘lmadi. Birozdan so‘ng qayta urinib ko‘ring. Muammo davom etsa, sayt ma’muriga murojaat qiling.',
+      'Saytning xat yuborish xizmati hali sozlanmagan. Keyinroq urinib ko‘ring yoki sayt ma’muriga murojaat qiling.',
     )
 );
 

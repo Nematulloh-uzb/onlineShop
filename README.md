@@ -28,14 +28,14 @@ npm run test:server
 npm run build --prefix client
 ```
 
-## Email tasdiqlash va parolni tiklash
+## Elektron pochtani tasdiqlash va parolni tiklash
 
-Ro‘yxatdan o‘tish va parolni tiklash email yuborish uchun Gmail SMTP talab qiladi.
-Google hisobingizda 2 bosqichli himoyani yoqing, so‘ng Google Account → Xavfsizlik →
-2 bosqichli himoya → Ilova parollari bo‘limidan server uchun App Password yarating.
-Oddiy Gmail parolingizni ishlatmang. App Password’ni chatga yoki repoga yubormang.
-Lokal ishga tushirishda quyidagi sozlamalarni `server/.env` fayliga, Docker ishlatilganda
-loyiha boshidagi `.env` fayliga kiriting:
+Hisobni tasdiqlash kodi hamda parolni yangilash havolasi Gmail orqali yuboriladi.
+Buning uchun Google hisobingizda ikki bosqichli himoyani yoqing, so‘ng Google hisobining
+Xavfsizlik bo‘limidagi Ilova parollari sahifasidan ushbu loyiha uchun alohida ilova parolini yarating.
+Gmail’ga kirishdagi oddiy parolingizni ishlatmang. Ilova parolini chatga yozmang yoki
+repozitoriyga joylamang. Lokal ishga tushirganda quyidagi qiymatlarni `server/.env`
+fayliga, Docker’da esa loyihaning asosiy papkasidagi `.env` fayliga kiriting:
 
 ```dotenv
 SMTP_HOST=smtp.gmail.com
@@ -43,17 +43,17 @@ SMTP_PORT=465
 SMTP_SECURE=true
 SMTP_USER=your-address@gmail.com
 SMTP_PASS=your-16-character-app-password
-SMTP_FROM=AURA <your-address@gmail.com>
+SMTP_FROM=VERDE <your-address@gmail.com>
 ```
 
-`SMTP_FROM` qiymatini `SMTP_USER` dagi Gmail manziliga moslang yoki qoldirib keting.
-Sozlamalarni saqlagach serverni qayta ishga tushiring. Yangi hisobga 10 daqiqada eskiradigan
-6 xonali kod yuboriladi; email tasdiqlanmaguncha tizimga kirib bo‘lmaydi. Parolni tiklash
-havolasi bir martalik va 30 daqiqada eskiradi. SMTP sozlanmagan yoki email yuborish
-muvaffaqiyatsiz bo‘lsa, API aniq xato qaytaradi va email yuborilgandek ko‘rsatmaydi.
-Lokal `development` muhitida SMTP sozlanmagan bo‘lsa, tiklash emailga yuborilmaydi; uning
-o‘rniga faqat shu muhitdagi sahifada sinov uchun havola ko‘rsatiladi. Bu imkoniyat production’da
-o‘chirilgan, u yerda SMTP sozlanishi shart.
+`SMTP_FROM` утгад `SMTP_USER`-тэй ижил Gmail хаягийг оруул, эсвэл хоосон үлдээ.
+Утгуудыг хадгалсны дараа серверийг дахин эхлүүл. Бүртгүүлэхэд 10 минут хүчинтэй зургаан
+оронтой код илгээнэ; хаягаа баталгаажуулаагүй хэрэглэгч нэвтэрч чадахгүй. Нууц үг
+шинэчлэх холбоос нэг удаа ашиглагдах бөгөөд 30 минут хүчинтэй. Gmail илгээх тохиргоо
+ороогүй эсвэл илгээлт амжилтгүй болбол үйлдэл амжилттай болсон мэт харуулахгүй, дэлгэцэд
+ойлгомжтой алдаа үзүүлнэ. Хөгжүүлэлтийн орчинд ч нууц үг сэргээх холбоосыг дэлгэцэд
+гаргахгүй; холбоос зөвхөн баталгаажсан хаяг руу имэйлээр очно. Gmail тохиргоогүй үед
+бүртгэлийн код болон нууц үг сэргээх холбоос имэйлээр илгээгдэхгүй.
 
 ## Production deployment
 

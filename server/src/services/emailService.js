@@ -73,7 +73,7 @@ const sendEmail = async ({ to, subject, text, html }) => {
     }
 
     console.error('[Email] Xat yuborilmadi:', error);
-    const deliveryError = new Error('Hozircha elektron xat yuborib bo‘lmadi. Birozdan so‘ng qayta urinib ko‘ring. Muammo davom etsa, sayt ma’muriga murojaat qiling.');
+    const deliveryError = new Error('Elektron xat yuborilmadi. Birozdan so‘ng qayta urinib ko‘ring yoki sayt ma’muriga murojaat qiling.');
     deliveryError.statusCode = 503;
     throw deliveryError;
   }
