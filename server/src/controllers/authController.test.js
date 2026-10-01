@@ -212,6 +212,11 @@ describe('authentication and refresh sessions', () => {
     user.comparePassword.mockResolvedValue(false);
     await expect(invoke(login, { body: { email: user.email, password: 'wrong' } }))
       .rejects.toMatchObject({ statusCode: 401 });
+
+    user.comparePassword.mockResolvedValue(true);
+    user.emailVerified = undefined;
+    await expect(invoke(login, { body: { email: user.email, password: 'secret123' } }))
+      .rejects.toMatchObject({ statusCode: 403 });
   });
 
   test('counts invalid email verification codes and never authenticates', async () => {
