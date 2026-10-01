@@ -23,7 +23,10 @@ const shouldRequireEmail = () => env.NODE_ENV !== 'test';
 const emailConfigurationError = () => (
   isEmailConfigured()
     ? null
-    : new ApiError(503, 'Email yuborish sozlanmagan. Server administratori Gmail SMTP ma’lumotlarini kiritsin.')
+    : new ApiError(
+      503,
+      'Parol tiklash xati yuborilmadi: Gmail SMTP sozlanmagan. Lokal ishga tushirishda server/.env, Dockerda .env fayliga SMTP_USER (Gmail manzili) va SMTP_PASS (Google App Password) kiriting, so‘ng serverni qayta ishga tushiring.',
+    )
 );
 
 const issueVerificationCode = async (user) => {
