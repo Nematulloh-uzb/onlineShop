@@ -323,16 +323,16 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
     return next(new ApiError(503, 'Parolni tiklash xizmati hozircha mavjud emas'));
   }
   const configurationError = emailConfigurationError();
+  const user = await User.findOne({ email: normalizedEmail })
+    .select('+resetPasswordTokenHash +resetPasswordExpires');
+
   if (configurationError && env.NODE_ENV !== 'development') {
     return next(configurationError);
   }
 
-  const user = await User.findOne({ email: normalizedEmail })
-    .select('+resetPasswordTokenHash +resetPasswordExpires');
-
   if (configurationError && env.NODE_ENV === 'development') {
-    const token = randomBytes(32).toString('hex');
     if (user && user.isActive && user.emailVerified !== false) {
+      const token = randomBytes(32).toString('hex');
       user.resetPasswordTokenHash = createHash('sha256').update(token).digest('hex');
       user.resetPasswordExpires = new Date(Date.now() + 30 * 60 * 1000);
       await user.save();
