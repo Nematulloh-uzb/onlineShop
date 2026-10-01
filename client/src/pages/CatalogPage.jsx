@@ -8,7 +8,7 @@ import { api, getApiErrorMessage } from '../lib/api.js';
 
 const FILTERS = [
   { label: 'Barchasi', slug: '' },
-  { label: 'Erkaklar', slug: 'erkaklar' },
+  { label: 'Mahsulotlar', slug: 'erkaklar' },
   { label: 'Aksessuarlar', slug: 'aksessuarlar' },
 ];
 const SORT_OPTIONS = [

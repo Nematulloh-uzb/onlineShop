@@ -33,7 +33,7 @@ export default function Header() {
 
   const navLinks = [
     { to: '/', label: "Bosh sahifa", end: true },
-    { to: '/katalog/erkaklar', label: 'Erkaklar' },
+    { to: '/katalog/erkaklar', label: 'Mahsulotlar' },
     { to: '/katalog/aksessuarlar', label: 'Aksessuarlar' },
   ];
 

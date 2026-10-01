@@ -68,7 +68,7 @@ export default function HomePage() {
                 to="/katalog"
                 className="inline-flex h-14 items-center justify-center gap-2 rounded-lg bg-[#8A9A5B] px-7 font-['Inter'] text-sm font-semibold text-white transition-colors hover:bg-[#6E7A47]"
               >
-                Erkaklar kolleksiyasi
+                Mahsulotlar
                 <ArrowRight size={18} aria-hidden="true" />
               </Link>
               <a
@@ -102,7 +102,7 @@ export default function HomePage() {
               </h2>
             </div>
             <Link to="/katalog" className="inline-flex items-center gap-2 font-['Inter'] text-sm font-semibold text-[#56642B] hover:text-[#8A9A5B]">
-              Erkaklar kolleksiyasi
+              Mahsulotlar
               <ArrowRight size={17} aria-hidden="true" />
             </Link>
           </div>
