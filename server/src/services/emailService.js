@@ -60,6 +60,13 @@ const createEmailHtml = ({ preheader, content }) => `
   </html>
 `;
 
+const logEmailFailure = (error) => {
+  const code = typeof error?.code === 'string' && /^[A-Z0-9_-]{1,40}$/i.test(error.code)
+    ? error.code
+    : 'NOMA’LUM';
+  console.error(`[Email] Xat yuborilmadi. SMTP xato kodi: ${code}`);
+};
+
 const sendEmail = async ({ to, subject, text, html }) => {
   try {
     await getTransport().sendMail({
@@ -76,7 +83,7 @@ const sendEmail = async ({ to, subject, text, html }) => {
       throw configurationError;
     }
 
-    console.error('[Email] Xat yuborilmadi:', error);
+    logEmailFailure(error);
     const deliveryError = new Error('Elektron xat yuborilmadi. Birozdan so‘ng qayta urinib ko‘ring yoki sayt ma’muriga murojaat qiling.');
     deliveryError.statusCode = 503;
     throw deliveryError;
