@@ -108,7 +108,7 @@ describe('authentication and refresh sessions', () => {
       const result = await invoke(forgotPassword, { body: { email: user.email } });
 
       expect(result.statusCode).toBe(200);
-      expect(result.body.message).toMatch(/havolasi yuborildi/);
+      expect(result.body.message).toMatch(/server terminaliga chiqarildi/);
       expect(JSON.stringify(result.body)).not.toContain('/parolni-tiklash/');
       expect(sendPasswordResetLink).toHaveBeenCalledWith(expect.objectContaining({
         email: user.email,
