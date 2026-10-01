@@ -84,7 +84,7 @@ export const register = catchAsync(async (req, res, next) => {
 
   let existingUser = await User.findOne({ email: normalizedEmail })
     .select('+emailVerificationCodeHash +emailVerificationExpires +emailVerificationAttempts');
-  if (existingUser?.emailVerified !== false) {
+  if (existingUser && existingUser.emailVerified !== false) {
     return next(new ApiError(409, 'Ushbu elektron pochta manzili allaqachon ro‘yxatdan o‘tgan'));
   }
 
