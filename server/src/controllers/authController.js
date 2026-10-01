@@ -26,7 +26,7 @@ const emailConfigurationError = () => (
     ? null
     : new ApiError(
       503,
-      'Gmail orqali xat yuborish sozlanmagan. server/.env fayliga, Dockerda esa loyiha boshidagi .env fayliga SMTP_USER (Gmail manzili) va SMTP_PASS (Google ilova paroli) qiymatlarini kiriting. So‘ng serverni qayta ishga tushiring.',
+      'Hozircha elektron xat yuborib bo‘lmadi. Birozdan so‘ng qayta urinib ko‘ring. Muammo davom etsa, sayt ma’muriga murojaat qiling.',
     )
 );
 

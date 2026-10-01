@@ -102,7 +102,7 @@ describe('authentication and refresh sessions', () => {
       await expect(invoke(forgotPassword, { body: { email: 'ada@example.com' } }))
         .rejects.toMatchObject({
           statusCode: 503,
-          message: expect.stringContaining('SMTP_USER (Gmail manzili)'),
+          message: expect.stringContaining('Hozircha elektron xat yuborib bo‘lmadi'),
         });
       expect(User.findOne).not.toHaveBeenCalled();
       expect(User.create).not.toHaveBeenCalled();
@@ -316,7 +316,7 @@ describe('authentication and refresh sessions', () => {
       await expect(invoke(forgotPassword, { body: { email: 'ada@example.com' } }))
         .rejects.toMatchObject({
           statusCode: 503,
-          message: expect.stringContaining('SMTP_USER (Gmail manzili)'),
+          message: expect.stringContaining('Hozircha elektron xat yuborib bo‘lmadi'),
         });
       expect(User.findOne).not.toHaveBeenCalled();
     } finally {
