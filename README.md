@@ -46,14 +46,15 @@ SMTP_PASS=your-16-character-app-password
 SMTP_FROM=VERDE <your-address@gmail.com>
 ```
 
-`SMTP_FROM` утгад `SMTP_USER`-тэй ижил Gmail хаягийг оруул, эсвэл хоосон үлдээ.
-Утгуудыг хадгалсны дараа серверийг дахин эхлүүл. Бүртгүүлэхэд 10 минут хүчинтэй зургаан
-оронтой код илгээнэ; хаягаа баталгаажуулаагүй хэрэглэгч нэвтэрч чадахгүй. Нууц үг
-шинэчлэх холбоос нэг удаа ашиглагдах бөгөөд 30 минут хүчинтэй. Gmail илгээх тохиргоо
-ороогүй эсвэл илгээлт амжилтгүй болбол үйлдэл амжилттай болсон мэт харуулахгүй, дэлгэцэд
-ойлгомжтой алдаа үзүүлнэ. Хөгжүүлэлтийн орчинд ч нууц үг сэргээх холбоосыг дэлгэцэд
-гаргахгүй; холбоос зөвхөн баталгаажсан хаяг руу имэйлээр очно. Gmail тохиргоогүй үед
-бүртгэлийн код болон нууц үг сэргээх холбоос имэйлээр илгээгдэхгүй.
+`SMTP_FROM` maydoniga `SMTP_USER` dagi Gmail manzilini kiriting yoki uni bo‘sh qoldiring.
+Sozlamalarni saqlagach, serverni qayta ishga tushiring. Hisob ochishda 10 daqiqa amal
+qiladigan olti xonali tasdiqlash kodi yuboriladi. Elektron pochtasi tasdiqlanmagan
+foydalanuvchi tizimga kira olmaydi. Parolni yangilash havolasi faqat bir marta ishlaydi
+va 30 daqiqadan keyin o‘z kuchini yo‘qotadi. Gmail jo‘natish sozlamalari kiritilmagan yoki
+xat yuborilmagan bo‘lsa, tizim bu ish bajarildi deb ko‘rsatmaydi, tushunarli ogohlantirish
+chiqaradi. Sinov muhitida ham parol tiklash havolasi sahifaga chiqarilmaydi; u faqat
+tasdiqlangan manzilga xat qilib yuboriladi. Gmail sozlamasi bo‘lmasa, tasdiqlash kodi hamda
+parolni tiklash havolasi yuborilmaydi.
 
 ## Production deployment
 
