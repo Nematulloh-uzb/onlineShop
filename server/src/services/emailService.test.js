@@ -157,6 +157,7 @@ describe('email delivery configuration', () => {
   test('requires SMTP in production even when sending a reset link', async () => {
     emailEnv.NODE_ENV = 'production';
     const consoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const consoleLog = jest.spyOn(console, 'log').mockImplementation(() => {});
 
     try {
       await expect(sendPasswordResetLink({
